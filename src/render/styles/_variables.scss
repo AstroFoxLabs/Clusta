@@ -1,0 +1,55 @@
+$primary-100: #15191b;
+$primary-200: #181d20;
+$primary-300: #22292c;
+$primary-400: #242a2d;
+$primary-500: #282f33;
+$primary-600: #2c3236;
+$primary-700: #363e44;
+$primary-800: #4f5a62;
+
+$accent-300: #2a6b83;
+$accent-400: #3c87a3;
+$accent-500: #4b99b6;
+
+$white: #ffffff;
+$white-100: #8a9194;
+$white-200: #a5abae;
+$white-300: #bdbfc0;
+$white-400: #ccd0d2;
+$white-500: #dbe2e5;
+
+$white-trans-75: #ffffff75;
+$white-trans-50: #ffffff50;
+$white-trans-35: #ffffff35;
+$white-trans-25: #ffffff25;
+$white-trans-10: #ffffff10;
+
+$box-shadow-default: 3px 3px 5px $primary-300;
+
+// Text-Colors
+$text-faded: #07040450;
+$text-normal: $white-400;
+$text-highlight: $white-500;
+$text-white: $white;
+
+// Font-Families
+
+$font-title: rubik, sans-serif;
+$font-body: rubik, sans-serif;
+$font-input: nunito, mono, monospace;
+
+// Radius
+$border-radius-xs: 3px;
+$border-radius-sm: 5px;
+$border-radius-md: 10px;
+$border-radius-lg: 14px;
+$border-radius-full: 9999px;
+
+// Z-Index
+$z-index-dropdown: 10;
+$z-index-modal: 20;
+$z-index-tooltip: 30;
+$z-index-popover: 40;
+$z-index-toast: 50;
+$z-index-sticky: 60;
+$z-index-right-click-menu: 70;

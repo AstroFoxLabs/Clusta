@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+        "target": "ES2022",
+        "module": "NodeNext",
+        "moduleResolution": "nodenext",
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "outDir": "../dist",
+        "rootDir": "./",
+        "types": ["node", "electron"],
+        "baseUrl": ".",
+        "paths": {
+            "@shared/*": ["./shared/*"],
+            "@main/*": ["./main/*"],
+            "@render/*": ["./render/*"]
+        }
+    },
+    "include": ["./main/**/*.ts", "./shared/**/*.ts", "./shared/**/*.ts"],
+    "exclude": ["node_modules", "../dist", "./preload"]
+}

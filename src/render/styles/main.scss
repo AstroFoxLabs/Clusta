@@ -1,0 +1,112 @@
+@use 'variables' as *;
+@use './fonts.scss';
+@use '@vscode/codicons/dist/codicon.css';
+
+// resets
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html {
+    font-family: $font-body;
+    color: $text-normal;
+    font-size: 12px;
+    -moz-osx-font-smoothing: auto;
+    font-weight: 400;
+}
+
+img,
+picture,
+video,
+canvas,
+svg {
+    display: block;
+    max-width: 100%;
+}
+
+input,
+button,
+textarea,
+select {
+    font-family: $font-input;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+body {
+    background-color: $primary-500;
+    margin: 0;
+
+    &.is-resizing {
+        cursor: col-resize !important;
+        user-select: none !important;
+    }
+}
+
+button {
+    border: none;
+    box-shadow: none;
+    color: $white-400;
+    background-color: $primary-500;
+    outline: 1px solid $white-trans-50;
+    border-radius: $border-radius-full;
+    padding: 0.25em 0.75em;
+    font-weight: 500;
+
+    &:hover {
+        background-color: $primary-700;
+        cursor: pointer;
+    }
+
+    &.primary {
+        background-color: $accent-400;
+        color: $white;
+        outline: unset;
+
+        &:hover {
+            background-color: $accent-500;
+        }
+    }
+
+    &.danger {
+        background-color: #932136;
+        color: $white;
+        outline: unset;
+
+        &:hover {
+            background-color: #d32f2f;
+        }
+    }
+}
+
+select {
+    background-color: $primary-700;
+    border: none;
+    box-shadow: none;
+    border-radius: $border-radius-sm;
+    padding: 0.25rem 0.5rem;
+    color: $text-normal;
+    cursor: pointer;
+
+    &:focus {
+        border: none;
+        outline: 2px solid $accent-400;
+    }
+}
+
+// scrollbars
+
+::-webkit-scrollbar {
+    display: none;
+}
+
+// line-height fix for codicons in buttons otherwise they are vertically misaligned
+button:has(> span.codicon) {
+    line-height: 0;
+    height: fit-content;
+}

@@ -1,0 +1,15 @@
+{
+    "extends": "../tsconfig.json",
+    "compilerOptions": {
+        "module": "commonjs",
+        "moduleResolution": "classic",
+        "outDir": "../../dist",
+        "rootDir": "../",
+        "paths": {
+            "@shared/*": ["./shared/*"],
+            "@main/*": ["./main/*"]
+        }
+    },
+    "include": ["./**/*.ts", "./**/*.html"],
+    "exclude": []
+}

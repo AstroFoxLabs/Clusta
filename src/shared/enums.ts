@@ -1,0 +1,15 @@
+export enum MIME_TYPE {
+    JSON = 'application/json',
+    XML = 'application/xml',
+    JPEG = 'image/jpeg',
+    PNG = 'image/png',
+    GIF = 'image/gif',
+    WEBP = 'image/webp',
+    BMP = 'image/bmp',
+    TIFF = 'image/tiff',
+    SVG = 'image/svg+xml',
+    PDF = 'application/pdf',
+    ZIP = 'application/zip',
+    MP4 = 'video/mp4',
+    MP3 = 'audio/mpeg',
+}
