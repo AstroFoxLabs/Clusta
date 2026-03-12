@@ -51,7 +51,11 @@ export default class FileStorageService {
         if (!buffer || buffer.length === 0) {
             throw new Error('Buffer is empty or undefined');
         }
-        const hash = crypto.createHash('sha256').update(buffer.subarray(0, inputBytes)).digest('hex').slice(0, outputLength);
+        const hash = crypto
+            .createHash('sha256')
+            .update(buffer.subarray(0, inputBytes))
+            .digest('hex')
+            .slice(0, outputLength);
         return hash;
     }
 
