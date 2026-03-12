@@ -1,6 +1,6 @@
 {
     "name": "clusta",
-    "version": "1.0.0",
+    "version": "v1.0.0",
     "license": "GPLv3",
     "type": "commonjs",
     "main": "dist/main/main.js",
@@ -12,7 +12,7 @@
         "pretty": "prettier --write \"./**/*.{js,jsx,mjs,cjs,ts,tsx,json}\"",
         "esbuild-main": "node build-main.mjs",
         "esbuild-preload": "node build-preload.mjs",
-        "build-for-windows": "npm run build && electron-builder --win"
+        "build-for-windows": "npm run build && dotenv -e .env electron-builder --publish onTag"
     },
     "build": {
         "appId": "com.astrofoxlabs.clusta",
@@ -26,21 +26,19 @@
             "target": "dmg"
         },
         "win": {
-            "target": "nsis"
+            "target": "nsis",
+            "publish": [
+                "github"
+            ]
         },
         "linux": {
             "target": "AppImage"
         },
         "publish": {
             "provider": "github",
-            "owner": "astrofoxlabs",
-            "repo": "clusta"
-        },
-        "asar": true,
-        "asarUnpack": [
-            "**/node_modules/sharp/**/*",
-            "**/node_modules/@img/**/*"
-        ]
+            "owner": "AstroFoxLabs",
+            "repo": "Clusta"
+        }
     },
     "prettier": {
         "semi": true,
@@ -55,7 +53,9 @@
         "@types/react-dom": "^19.2.3",
         "@vitejs/plugin-vue": "^6.0.3",
         "concurrently": "^9.2.1",
+        "cross-env": "^10.1.0",
         "dotenv": "^17.2.3",
+        "dotenv-cli": "^11.0.0",
         "electron": "^39.2.2",
         "electron-builder": "^26.8.1",
         "electron-updater": "^6.8.3",
