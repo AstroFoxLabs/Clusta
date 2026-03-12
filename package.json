@@ -2,6 +2,11 @@
     "name": "clusta",
     "version": "v1.0.4",
     "license": "GPLv3",
+    "author": {
+        "name": "AstroFoxLabs (Vinzenz Wetzel)",
+        "email": "astrofox@astrofoxlabs.com",
+        "url": "https://astrofoxlabs.com"
+    },
     "type": "commonjs",
     "main": "dist/main/main.js",
     "scripts": {
