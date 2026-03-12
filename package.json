@@ -1,6 +1,6 @@
 {
     "name": "clusta",
-    "version": "v1.0.1",
+    "version": "v1.0.2",
     "license": "GPLv3",
     "type": "commonjs",
     "main": "dist/main/main.js",
@@ -12,7 +12,7 @@
         "pretty": "prettier --write \"./**/*.{js,jsx,mjs,cjs,ts,tsx,json}\"",
         "esbuild-main": "node build-main.mjs",
         "esbuild-preload": "node build-preload.mjs",
-        "build-for-windows": "npm run build && dotenv -e .env electron-builder --publish onTag"
+        "build-for-windows": "npm run build && dotenv -e .env -- electron-builder --publish always"
     },
     "build": {
         "appId": "com.astrofoxlabs.clusta",
@@ -25,7 +25,11 @@
             "target": "dmg"
         },
         "win": {
-            "target": "nsis",
+            "target": [
+                "nsis",
+                "portable",
+                "zip"
+            ],
             "publish": [
                 "github"
             ]
