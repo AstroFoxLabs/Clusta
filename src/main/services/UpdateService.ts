@@ -1,15 +1,14 @@
-import { dialog } from 'electron';
-import electronUpdater, { type AppUpdater } from 'electron-updater';
-import { LogService } from './LogService.js';
+import electron from 'electron';
+import { autoUpdater, type AppUpdater } from 'electron-updater';
+import LogService from './LogService.js';
+
+const { dialog } = electron;
 
 export function getAutoUpdater(): AppUpdater {
-    // Using destructuring to access autoUpdater due to the CommonJS module of 'electron-updater'.
-    // Workaround for ESM compatibility issues
-    const { autoUpdater } = electronUpdater;
     return autoUpdater;
 }
 
-export class UpdateService {
+export default class UpdateService {
     constructor() {
         this.registerAutoUpdaterEvents();
     }
@@ -62,9 +61,8 @@ export class UpdateService {
         });
     }
 
-    checkForUpdates() {
-        LogService.info('Checking for updates...');
+    async checkForUpdates() {
         const autoUpdater = getAutoUpdater();
-        autoUpdater.checkForUpdatesAndNotify();
+        await autoUpdater.checkForUpdatesAndNotify();
     }
 }

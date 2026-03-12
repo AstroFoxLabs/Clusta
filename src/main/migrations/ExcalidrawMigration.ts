@@ -1,5 +1,5 @@
-import { Migration } from '../services/MigrationService.js';
-import DatabaseService from '../services/DatabaseService.js';
+import DatabaseService from '@main/services/DatabaseService.js';
+import { Migration } from '@main/services/MigrationService.js';
 
 export default class ExcalidrawMigration implements Migration {
     name = '006_excalidraw_migration';
@@ -15,6 +15,5 @@ export default class ExcalidrawMigration implements Migration {
                 ')',
             [],
         );
-        return;
     }
 }

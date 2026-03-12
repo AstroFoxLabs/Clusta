@@ -12,78 +12,78 @@
 </template>
 
 <script setup lang="ts">
-    // --- PROPS & EMITS ---
+// --- PROPS & EMITS ---
 
-    const props = defineProps({
-        min: {
-            type: Number,
-            default: 0,
-        },
-        max: {
-            type: Number,
-            default: 100,
-        },
-        step: {
-            type: Number,
-            default: 10,
-        },
-    });
-
-    const emits = defineEmits(['onChange', 'onInput']);
-
-    // --- STORES ---
-
-    // --- STATES ---
-
-    const model = defineModel({
+const props = defineProps({
+    min: {
         type: Number,
-        default: 50,
-    });
+        default: 0,
+    },
+    max: {
+        type: Number,
+        default: 100,
+    },
+    step: {
+        type: Number,
+        default: 10,
+    },
+});
 
-    // --- COMPUTED ---
+const emits = defineEmits(['onChange', 'onInput']);
 
-    // --- WATCHERS ---
+// --- STORES ---
 
-    // --- METHODS ---
+// --- STATES ---
 
-    // Happens after letting go of the slider
-    const onChange = (e: Event) => {
-        const target = e.target as HTMLInputElement;
-        emits('onChange', e, parseInt(target.value));
-    };
+const model = defineModel({
+    type: Number,
+    default: 50,
+});
+
+// --- COMPUTED ---
+
+// --- WATCHERS ---
+
+// --- METHODS ---
+
+// Happens after letting go of the slider
+const onChange = (e: Event) => {
+    const target = e.target as HTMLInputElement;
+    emits('onChange', e, parseInt(target.value));
+};
 </script>
 
 <style scoped lang="scss">
-    @use '../../styles/_variables' as *;
+@use '@render/styles/variables' as *;
 
-    .slider {
-        background-color: transparent;
+.slider {
+    background-color: transparent;
+    -webkit-appearance: none;
+    appearance: none;
+
+    &::-webkit-slider-thumb {
         -webkit-appearance: none;
-        appearance: none;
+        width: 0.75rem;
+        height: 0.75rem;
+        border-radius: $border-radius-full;
+        outline: none;
+        background-color: $white-500;
+        pointer-events: none;
 
-        &::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 0.75rem;
-            height: 0.75rem;
-            border-radius: $border-radius-full;
-            outline: none;
-            background-color: $white-500;
-            pointer-events: none;
-
-            &:hover {
-                background-color: $white;
-                cursor: pointer;
-            }
-        }
-
-        &::-webkit-slider-runnable-track {
-            height: 10px;
-            background: $primary-800;
-            border-radius: $border-radius-full;
-
-            &:hover {
-                cursor: pointer;
-            }
+        &:hover {
+            background-color: $white;
+            cursor: pointer;
         }
     }
+
+    &::-webkit-slider-runnable-track {
+        height: 10px;
+        background: $primary-800;
+        border-radius: $border-radius-full;
+
+        &:hover {
+            cursor: pointer;
+        }
+    }
+}
 </style>

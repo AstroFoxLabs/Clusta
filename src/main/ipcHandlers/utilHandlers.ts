@@ -1,5 +1,5 @@
+import FileStorageService from '@main/services/FileStorageService.js';
 import { register } from './ipcHandlers.js';
-import FileStorageService from '../services/FileStorageService.js';
 
 register<{ buffer: Uint8Array }, string>('create-buffer-hash', async (event, { buffer }) => {
     return FileStorageService.createHash(Buffer.from(buffer));

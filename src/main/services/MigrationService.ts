@@ -1,9 +1,9 @@
-import CategoriesMigration from '../migrations/CategoriesMigration.js';
-import ExcalidrawMigration from '../migrations/ExcalidrawMigration.js';
-import ImagesCategoriesMigration from '../migrations/ImagesCategoriesMigration.js';
-import ImagesMigration from '../migrations/ImagesMigration.js';
-import ImagesTagsMigration from '../migrations/ImagesTagsMigration.js';
-import TagsMigration from '../migrations/TagsMigration.js';
+import CategoriesMigration from '@main/migrations/CategoriesMigration.js';
+import ExcalidrawMigration from '@main/migrations/ExcalidrawMigration.js';
+import ImagesCategoriesMigration from '@main/migrations/ImagesCategoriesMigration.js';
+import ImagesMigration from '@main/migrations/ImagesMigration.js';
+import ImagesTagsMigration from '@main/migrations/ImagesTagsMigration.js';
+import TagsMigration from '@main/migrations/TagsMigration.js';
 import DatabaseService from './DatabaseService.js';
 
 export interface Migration {
@@ -12,7 +12,7 @@ export interface Migration {
     down?: () => Promise<void>;
 }
 
-export class MigrationService {
+export default class MigrationService {
     migrations: Migration[] = [];
 
     constructor() {

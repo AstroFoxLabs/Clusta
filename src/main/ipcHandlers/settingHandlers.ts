@@ -1,6 +1,6 @@
-import type { AppSettings } from '@shared/settings.js';
-import SettingsService from '../services/SettingsService.js';
 import { register } from './ipcHandlers.js';
+import SettingsService from '@main/services/SettingsService.js';
+import type { AppSettings } from '@shared/settings.js';
 
 register<{}, AppSettings>('load-app-settings', async () => {
     return SettingsService.getInstance().loadSettings();

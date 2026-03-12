@@ -5,7 +5,7 @@
         @keydown.enter="onSubmit"
         v-model="model"
         type="text"
-        @blur="$emit('blur', $event)"
+        @blur="$emit('blur', $event, model)"
         ref="refInputField"
     />
 </template>
@@ -45,9 +45,9 @@ const refInputField = ref<HTMLInputElement | null>(null);
 
 // --- METHODS ---
 
-const onSubmit = () => {
+const onSubmit = (e: KeyboardEvent) => {
     refInputField.value?.blur();
-    emit('onSubmit', model.value);
+    emit('onSubmit', e, model.value);
 };
 
 defineExpose({
@@ -60,7 +60,7 @@ defineExpose({
 </script>
 
 <style scoped lang="scss">
-@use '../../styles/variables.scss' as *;
+@use '@render/styles/variables' as *;
 
 .input-field {
     background-color: $primary-700;
@@ -71,7 +71,7 @@ defineExpose({
     color: $text-normal;
     width: inherit;
     font-size: inherit;
-    font-weight: 600;
+    font-weight: 500;
 
     &:focus-visible {
         border: none;

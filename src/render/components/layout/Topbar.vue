@@ -2,13 +2,11 @@
     <div class="topbar">
         <div class="topbar-actions">
             <div class="topbar-actions-extra">
-                <slot name="actions"></slot>
+                <slot name="actions"> </slot>
             </div>
-            <Icon
-                name="icon_settings"
-                @click="router.currentRoute.value.name !== 'settings' ? router.push('settings') : router.push('/')"
-                title="Open Settings"
-            />
+            <div class="topbar-actions-settings">
+                <Icon codicon-name="settings-gear" @click="toggleSettings" />
+            </div>
             <div class="topbar-actions-app-window">
                 <div class="codicon codicon-chrome-minimize" @click="minimizeWindow"></div>
                 <div class="codicon codicon-chrome-restore" @click="restoreWindow"></div>
@@ -46,10 +44,18 @@ const restoreWindow = async () => {
 const closeWindow = async () => {
     await ipcAPI(() => window.appWindow.close());
 };
+
+const toggleSettings = () => {
+    if (router.currentRoute.value.name !== 'settings') {
+        router.push('settings');
+    } else {
+        router.push('/');
+    }
+};
 </script>
 
 <style scoped lang="scss">
-@use '../../styles/variables' as *;
+@use '@render/styles/variables' as *;
 
 .topbar {
     -webkit-app-region: drag; // Ignore IDE warning. Needed to make the topbar draggable.
@@ -57,7 +63,6 @@ const closeWindow = async () => {
     align-items: center;
     width: 100%;
     justify-content: end;
-    margin: 0.25rem 0;
     border-bottom: 1px solid $primary-700;
     margin-bottom: 0.5rem;
     height: 3rem;
@@ -98,10 +103,6 @@ const closeWindow = async () => {
                 }
             }
         }
-    }
-
-    :deep(.icon) {
-        height: 1.5rem;
     }
 }
 </style>

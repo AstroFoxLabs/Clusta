@@ -8,44 +8,46 @@
 </template>
 
 <script setup lang="ts">
-    // --- PROPS & EMITS ---
+// --- PROPS & EMITS ---
 
-    const props = defineProps({
-        // The label of the field
-        label: {
-            type: String,
-            required: true,
-        },
-    });
+const props = defineProps({
+    // The label of the field
+    label: {
+        type: String,
+        required: true,
+    },
+});
 
-    // --- STORES ---
+// --- STORES ---
 
-    // --- STATES ---
+// --- STATES ---
 
-    // --- COMPUTED ---
+// --- COMPUTED ---
 
-    // --- WATCHERS ---
+// --- WATCHERS ---
 
-    // --- METHODS ---
+// --- METHODS ---
 </script>
 
 <style scoped lang="scss">
-    .field {
-        display: flex;
-        flex-direction: row;
-        gap: 0.5rem;
+@use '@render/styles/variables' as *;
 
-        &-label {
-            max-width: 20rem;
-            width: 12.5rem;
-            min-width: 12.5rem;
-            align-content: center;
-        }
+.field {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
 
-        &-content {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+    &-label {
+        max-width: 20rem;
+        width: 12.5rem;
+        min-width: 12.5rem;
+        align-content: center;
     }
+
+    &-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+}
 </style>

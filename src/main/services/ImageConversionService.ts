@@ -1,6 +1,5 @@
 import { ALLOWED_IMAGE_TYPES } from '@shared/constants.js';
 import sharp, { FormatEnum } from 'sharp';
-import { LogService } from './LogService.js';
 import SettingsService from './SettingsService.js';
 
 export interface ImageConversionOptions {
@@ -35,23 +34,18 @@ export default class ImageConversionService {
     }
 
     async toWebP(): Promise<Buffer> {
-        try {
-            const { data, info } = await sharp(this.buffer, {
-                animated: this.animated,
+        const { data, info } = await sharp(this.buffer, {
+            animated: this.animated,
+        })
+            .webp({
+                lossless: this.lossless,
+                quality: this.quality,
             })
-                .webp({
-                    lossless: this.lossless,
-                    quality: this.quality,
-                })
-                // Possibly unsafe cast
-                .toFormat(this.format as unknown as keyof FormatEnum)
-                .toBuffer({ resolveWithObject: true });
-            this.buffer = data;
-            this.info = info;
-            return this.buffer;
-        } catch (err) {
-            LogService.error('ImageConversionService.toWebP failed:', err);
-            throw err;
-        }
+            // Possibly unsafe cast
+            .toFormat(this.format as unknown as keyof FormatEnum)
+            .toBuffer({ resolveWithObject: true });
+        this.buffer = data;
+        this.info = info;
+        return this.buffer;
     }
 }

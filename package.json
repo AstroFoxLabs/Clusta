@@ -2,30 +2,21 @@
     "name": "clusta",
     "version": "1.0.0",
     "license": "GPLv3",
-    "type": "module",
+    "type": "commonjs",
     "main": "dist/main/main.js",
     "scripts": {
-        "dev": "npm run ts & concurrently \"npm run render-dev\" \"electron . \"",
-        "build": "npm run ts && npm run render-prod && electron .",
+        "dev": "npm run esbuild-main && npm run esbuild-preload && concurrently \"npm run vite --config ./vite.config.render.ts \" \"electron . \"",
+        "build": "npm run esbuild-main && npm run esbuild-preload && vite build --config ./vite.config.render.ts",
         "ts": "tsc -p src/tsconfig.json && tsc-alias -p src/tsconfig.json && tsc -p src/preload/tsconfig.json",
-        "start": "vite --config src/render/vite.config.js build && electron .",
         "test": "npx vitest",
         "pretty": "prettier --write \"./**/*.{js,jsx,mjs,cjs,ts,tsx,json}\"",
-        "render-prod": "vite build --config src/render/vite.config.js",
-        "render-dev": "vite --config src/render/vite.config.js",
-        "build-win": "npm run ts && npm run render-prod && electron-builder --win"
+        "esbuild-main": "node build-main.mjs",
+        "esbuild-preload": "node build-preload.mjs",
+        "build-for-windows": "npm run build && electron-builder --win"
     },
     "build": {
         "appId": "com.astrofoxlabs.clusta",
         "productName": "Clusta",
-        "files": [
-            "dist/**/*",
-            "package.json",
-            "assets/**/*",
-            "!**/*.map",
-            "!**/test",
-            "!**/*.md"
-        ],
         "compression": "maximum",
         "directories": {
             "buildResources": "assets",
@@ -44,7 +35,12 @@
             "provider": "github",
             "owner": "astrofoxlabs",
             "repo": "clusta"
-        }
+        },
+        "asar": true,
+        "asarUnpack": [
+            "**/node_modules/sharp/**/*",
+            "**/node_modules/@img/**/*"
+        ]
     },
     "prettier": {
         "semi": true,
@@ -58,10 +54,12 @@
         "@types/react": "^19.2.9",
         "@types/react-dom": "^19.2.3",
         "@vitejs/plugin-vue": "^6.0.3",
+        "concurrently": "^9.2.1",
         "dotenv": "^17.2.3",
         "electron": "^39.2.2",
         "electron-builder": "^26.8.1",
         "electron-updater": "^6.8.3",
+        "esbuild": "^0.27.3",
         "prettier": "^3.8.1",
         "sass-embedded": "^1.96.0",
         "tsc-alias": "^1.8.16",
@@ -71,10 +69,10 @@
     "dependencies": {
         "@excalidraw/excalidraw": "^0.18",
         "@vscode/codicons": "^0.0.44",
-        "concurrently": "^9.2.1",
         "electron-log": "^5.4.3",
         "file-type": "^21.3.0",
         "fuse.js": "^7.1.0",
+        "node-gyp": "^12.2.0",
         "pinia": "^3.0.4",
         "preact": "^10.28.2",
         "sharp": "^0.34.5",

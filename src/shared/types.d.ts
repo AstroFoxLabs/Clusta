@@ -5,6 +5,8 @@ type Values<T> = T[keyof T];
 
 export type IpcResponse<T> = IpcSuccess<T> | IpcError;
 
+type LastID = string | number;
+
 type ExcalidrawSceneData = ImportedDataState;
 
 interface ExcalidrawSceneRecord {
@@ -68,3 +70,5 @@ export interface Coordinates {
     x: number;
     y: number;
 }
+
+type UUID = string;

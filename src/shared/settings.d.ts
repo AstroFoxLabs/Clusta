@@ -26,9 +26,9 @@ export interface AppSettings {
         alwaysOnTop: boolean;
     };
     paths: {
-        fileDefaultPath: string;
-        appDefaultPath: string;
-        imageDefaultPath: string;
-        excalidrawDefaultPath: string;
+        app: string;
+        root: string;
+        images: string;
+        excalidraw: string;
     };
 }

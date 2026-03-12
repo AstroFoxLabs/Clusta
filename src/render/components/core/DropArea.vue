@@ -1,80 +1,91 @@
 <template lang="html">
     <div class="drop-area" @dragleave.prevent.stop="onDragLeave" @drop.prevent.stop="onDrop" @dragover.prevent>
-        <span class="drop-area-overlay">Drop Here</span>
+        <span class="drop-area-overlay">{{ props.title }}</span>
     </div>
 </template>
 
 <script setup lang="ts">
-    import { onMounted, onUnmounted, ref } from 'vue';
-    import { useMouse } from '@render/composables/mouse';
+import { useMouse } from '@render/composables/useMouse';
+import { onMounted, onUnmounted } from 'vue';
 
-    // --- PROPS & EMITS ---
+// --- PROPS & EMITS ---
 
-    const emits = defineEmits(['onClose', 'onDrop']);
+const props = defineProps({
+    // In case you need to position the container absolutely
+    title: {
+        type: String,
+        required: false,
+        default: 'Drop Here',
+    },
+});
 
-    // --- STORES ---
+const emits = defineEmits(['onClose', 'onDrop']);
 
-    // --- STATES ---
+// --- STORES ---
 
-    // --- COMPUTED ---
+// --- STATES ---
 
-    const { x, y } = useMouse();
+// --- COMPUTED ---
 
-    // --- WATCHERS ---
+const { x, y } = useMouse();
 
-    // --- METHODS ---
+// --- WATCHERS ---
 
-    const onDrop = (e: DragEvent) => {
-        emits('onDrop', e);
-        emits('onClose', e);
-    };
+// --- METHODS ---
 
-    const onDragLeave = (e: DragEvent) => {
-        emits('onClose', e);
-    };
+const onDrop = (e: DragEvent) => {
+    emits('onDrop', e);
+    emits('onClose', e);
+};
 
-    const addEventListeners = () => {
-        window.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                emits('onClose', e);
-            }
-        });
-    };
+const onDragLeave = (e: DragEvent) => {
+    emits('onClose', e);
+};
 
-    const removeEventListeners = () => {
-        window.removeEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                emits('onClose', e);
-            }
-        });
-    };
-
-    onMounted(() => {
-        addEventListeners();
+const addEventListeners = () => {
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            emits('onClose', e);
+        }
     });
+};
 
-    onUnmounted(() => {
-        removeEventListeners();
+const removeEventListeners = () => {
+    window.removeEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            emits('onClose', e);
+        }
     });
+};
+
+onMounted(() => {
+    addEventListeners();
+});
+
+onUnmounted(() => {
+    removeEventListeners();
+});
 </script>
 
 <style scoped lang="scss">
-    .drop-area {
-        width: 100%;
-        height: 100%;
-        position: absolute;
-        top: 0;
-        left: 0;
-        z-index: 3;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: rgba(0, 0, 0, 0.5);
+@use '@render/styles/variables' as *;
 
-        &-overlay {
-            position: absolute;
-            left: v-bind(x) + 'px';
-            top: v-bind(y) + 'px';
-        }
+.drop-area {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: $z-index-drop-area;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.5);
+
+    &-overlay {
+        position: absolute;
+        left: v-bind(x) + 'px';
+        top: v-bind(y) + 'px';
     }
+}
 </style>

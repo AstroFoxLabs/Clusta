@@ -11,54 +11,55 @@
 </template>
 
 <script setup lang="ts">
-    // This compoent is used as a wrapper for drop areas.
-    // This means you can wrap any component with this DropWrapper and enable dropping
-    // and additionally control the visuals
+// This compoent is used as a wrapper for drop areas.
+// This means you can wrap any component with this DropWrapper and enable dropping
+// and additionally control the visuals
 
-    import { ref, useTemplateRef } from 'vue';
+import type { Ref } from 'vue';
+import { useTemplateRef } from 'vue';
 
-    // --- PROPS & EMITS ---
+// --- PROPS & EMITS ---
 
-    const emits = defineEmits(['onDrop']);
-    const dropWrapper = useTemplateRef('dropWrapper');
+const emits = defineEmits(['onDrop']);
+const dropWrapper = useTemplateRef('dropWrapper') as Ref<HTMLElement>;
 
-    // --- STORES ---
+// --- STORES ---
 
-    // --- STATES ---
+// --- STATES ---
 
-    // --- COMPUTED ---
+// --- COMPUTED ---
 
-    // --- WATCHERS ---
+// --- WATCHERS ---
 
-    // --- METHODS ---
+// --- METHODS ---
 
-    const onDrop = (e: DragEvent) => {
-        const dWrapper = dropWrapper.value as HTMLElement;
-        dWrapper.classList.remove('drag');
-        emits('onDrop', e);
-    };
+const onDrop = (e: DragEvent) => {
+    const dWrapper = dropWrapper.value;
+    dWrapper.classList.remove('drag');
+    emits('onDrop', e);
+};
 
-    const onDragLeave = (e: DragEvent) => {
-        const dWrapper = dropWrapper.value as HTMLElement;
-        dWrapper.classList.remove('drag');
-    };
+const onDragLeave = (e: DragEvent) => {
+    const dWrapper = dropWrapper.value;
+    dWrapper.classList.remove('drag');
+};
 
-    // It would be more nice, to have this in DragEnter, but it glitches too much. Fix?
-    const onDragOver = (e: DragEvent) => {
-        const dWrapper = dropWrapper.value as HTMLElement;
-        dWrapper.classList.add('drag');
-    };
+// It would be more nice, to have this in DragEnter, but it glitches too much. Fix?
+const onDragOver = (e: DragEvent) => {
+    const dWrapper = dropWrapper.value;
+    dWrapper.classList.add('drag');
+};
 </script>
 
 <style scoped lang="scss">
-    @use '@render/styles/_variables' as *;
+@use '@render/styles/variables' as *;
 
-    .drop-wrapper {
-    }
+.drop-wrapper {
+}
 
-    .drag {
-        background-color: rgba(255, 255, 255, 0.3);
-        outline: 2px solid $accent-400;
-        border-radius: 10px;
-    }
+.drag {
+    background-color: rgba(255, 255, 255, 0.3);
+    outline: 2px solid $accent-400;
+    border-radius: 10px;
+}
 </style>

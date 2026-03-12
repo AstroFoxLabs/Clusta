@@ -1,8 +1,8 @@
 import { AppSettings } from '@shared/settings.js';
-import { app as electron_path } from 'electron';
+import electron from 'electron';
 import fs from 'fs';
 import path from 'path';
-import { LogService } from './LogService.js';
+import LogService from './LogService.js';
 
 const defaultSettings: AppSettings = {
     image: {
@@ -32,11 +32,10 @@ const defaultSettings: AppSettings = {
         alwaysOnTop: false,
     },
     paths: {
-        // get the path of the app
-        fileDefaultPath: path.join(electron_path.getPath('userData'), 'files'),
-        appDefaultPath: electron_path.getAppPath(),
-        imageDefaultPath: path.join(electron_path.getPath('userData'), 'files', 'images'),
-        excalidrawDefaultPath: path.join(electron_path.getPath('userData'), 'files', 'excalidraw'),
+        app: electron.app.getAppPath(),
+        root: electron.app.getPath('userData'),
+        images: path.join(electron.app.getPath('userData'), 'images'),
+        excalidraw: path.join(electron.app.getPath('userData'), 'excalidraw'),
     },
 };
 
@@ -65,39 +64,22 @@ export default class SettingsService {
 
     loadSettings(): AppSettings {
         try {
-            // Create settings file with default settings if it doesn't exist
-            if (!fs.existsSync(path.join(electron_path.getPath('userData'), 'files', 'appSettings.json'))) {
-                LogService.warn('Settings file does not exist, creating default settings');
-                this.settings = { ...defaultSettings };
-                this.persistSettings();
-                return this.settings;
-            }
-
-            const data = fs.readFileSync(
-                path.join(electron_path.getPath('userData'), 'files', 'appSettings.json'),
-                'utf-8',
-            );
-            const loadedSettings = JSON.parse(data);
-            Object.assign(this.settings, defaultSettings, loadedSettings);
+            const data = fs.readFileSync(path.join(electron.app.getPath('userData'), 'settings.json'), 'utf-8');
+            Object.assign(this.settings, defaultSettings, JSON.parse(data));
         } catch (err) {
-            LogService.error('Error loading settings, using defaults:', err);
+            LogService.warn('Can not find Settings file. Using defaults:', err);
             this.settings = { ...defaultSettings };
+            this.persistSettings();
         }
         return this.settings;
     }
 
     persistSettings(): void {
-        try {
-            const settingsPath = path.join(electron_path.getPath('userData'), 'files', 'appSettings.json');
-            fs.writeFileSync(settingsPath, JSON.stringify(this.settings, null, 4), 'utf-8');
-            LogService.info('Settings persisted successfully to', settingsPath);
-        } catch (err) {
-            LogService.error('Error persisting settings:', err);
-        }
+        const settingsPath = path.join(electron.app.getPath('userData'), 'settings.json');
+        fs.writeFileSync(settingsPath, JSON.stringify(this.settings, null, 4), 'utf-8');
     }
 
     getDefaultSettings(): AppSettings {
-        LogService.info('Retrieving default settings:', defaultSettings);
         return defaultSettings;
     }
 }

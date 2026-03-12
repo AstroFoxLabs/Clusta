@@ -1,4 +1,4 @@
-import { mainWindow } from '../main.js';
+import { mainWindow } from '@main/main.js';
 import { register } from './ipcHandlers.js';
 
 register<{ alwaysOnTop: boolean }, void>('set-always-on-top', async (event, { alwaysOnTop }) => {

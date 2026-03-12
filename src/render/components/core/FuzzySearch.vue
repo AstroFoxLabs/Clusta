@@ -7,107 +7,101 @@
             type="text"
             v-model="searchQuery"
             @blur="$emit('blur', $event)"
-            :class="props.class"
         ></InputField>
         <slot name="fuzzy-search-suggestions"></slot>
     </div>
 </template>
 
 <script setup lang="ts">
-    import { ref, watch, useTemplateRef } from 'vue';
-    import Fuse from 'fuse.js';
-    import { computed } from 'vue';
-    import InputField from './InputField.vue';
+import Fuse from 'fuse.js';
+import { computed, useTemplateRef, watch } from 'vue';
+import InputField from './InputField.vue';
 
-    // Key decides which object properties are searched
-    export interface FuzzySearchKey {
-        name: string;
-        displayName: string;
-    }
+// Key decides which object properties are searched
+// Type just used for better display of suggestions in the frontend
+export interface FuzzySearchKey {
+    name: string;
+    displayName: string;
+}
 
-    // --- PROPS & EMITS ---
+// --- PROPS & EMITS ---
 
-    const props = defineProps({
-        sourceData: {
-            type: Array as () => Array<any>,
-            required: true,
-        },
-        filterKeys: {
-            type: Array as () => Array<FuzzySearchKey>,
-            required: false,
-        },
-        class: {
-            type: String,
-            required: false,
-            default: '',
-        },
-    });
-
-    const emits = defineEmits(['onUpdateResults', 'onUpdateQuery', 'blur']);
-
-    // --- STORES ---
-
-    // --- STATES ---
-
-    const searchQuery = defineModel({
-        type: String,
+const props = defineProps({
+    sourceData: {
+        type: Array as () => Array<any>,
+        required: true,
+    },
+    filterKeys: {
+        type: Array as () => Array<FuzzySearchKey>,
         required: false,
-        default: '',
-    });
+    },
+});
 
-    const fuzzyInputField = useTemplateRef('fuzzyInputField');
+const emits = defineEmits(['onUpdateResults', 'onUpdateQuery', 'blur']);
 
-    // --- COMPUTED ---
+// --- STORES ---
 
-    const fuseOptions = computed(() => ({
-        keys: props.filterKeys?.map((key) => key.name),
-        findAllMatches: true,
-        threshold: 0.5, // TODO: make configurable
-        shouldSort: true,
-    }));
+// --- STATES ---
 
-    // --- WATCHERS ---
+const searchQuery = defineModel({
+    type: String,
+    required: false,
+    default: '',
+});
 
-    watch(searchQuery, (newQuery) => {
-        emits('onUpdateQuery', newQuery);
-        performSearch();
-    });
+const fuzzyInputField = useTemplateRef('fuzzyInputField');
 
-    watch(
-        () => [props.sourceData, fuseOptions.value],
-        () => performSearch(),
-        { deep: true }
-    );
+// --- COMPUTED ---
 
-    // --- METHODS ---
+const fuseOptions = computed(() => ({
+    keys: props.filterKeys?.map((key) => key.name),
+    findAllMatches: true,
+    threshold: 0.5, // TODO: make configurable
+    shouldSort: true,
+}));
 
-    const performSearch = () => {
-        const fuse = new Fuse(props.sourceData, fuseOptions.value);
+// --- WATCHERS ---
 
-        const adjustedSQ = searchQuery.value.trim().toLocaleLowerCase();
-        if (adjustedSQ.trim() === '') {
-            // Empty -> return all results
-            emits('onUpdateResults', props.sourceData);
-            return;
+watch(searchQuery, (newQuery) => {
+    emits('onUpdateQuery', newQuery);
+    performSearch();
+});
+
+watch(
+    () => [props.sourceData, fuseOptions.value],
+    () => performSearch(),
+    { deep: true },
+);
+
+// --- METHODS ---
+
+const performSearch = () => {
+    const fuse = new Fuse(props.sourceData, fuseOptions.value);
+
+    const adjustedSQ = searchQuery.value.trim().toLocaleLowerCase();
+    if (adjustedSQ.trim() === '') {
+        // Empty -> return all results
+        emits('onUpdateResults', props.sourceData);
+        return;
+    }
+    const res = fuse.search(searchQuery.value as string);
+    const matches = res.map((result) => result.item);
+    emits('onUpdateResults', matches);
+};
+
+defineExpose({
+    focus: () => {
+        if (fuzzyInputField.value) {
+            fuzzyInputField.value.focus();
         }
-        const res = fuse.search(searchQuery.value as string);
-        const matches = res.map((result) => result.item);
-        emits('onUpdateResults', matches);
-    };
-
-    defineExpose({
-        focus: () => {
-            if (fuzzyInputField.value) {
-                fuzzyInputField.value.focus();
-            }
-        },
-    });
+    },
+});
 </script>
 
 <style lang="scss" scoped>
-    @use '../../styles/_variables' as *;
+@use '@render/styles/variables' as *;
 
-    .fuzzy-search {
-        text-align: center;
-    }
+.fuzzy-search {
+    text-align: center;
+}
 </style>

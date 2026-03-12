@@ -2,12 +2,14 @@
     <Topbar />
     <div class="settings-view">
         <div class="settings-view-controls">
-            <FieldGroup title="App Settings" class="field-group">
+            <FieldGroup class="field-group">
+                <template #title>App Settings</template>
                 <Field label="Always on Top" class="field">
                     <InputCheckbox type="checkbox" v-model="tmpSettings.app.alwaysOnTop" />
                 </Field>
             </FieldGroup>
-            <FieldGroup title="Image Saving Settings" class="field-group">
+            <FieldGroup class="field-group">
+                <template #title>Image Saving Settings</template>
                 <Field label="Format (WIP)" class="field">
                     <select v-model="tmpSettings.image.conversion.format" disabled="true">
                         <option v-for="format in Object.keys(ALLOWED_IMAGE_TYPES)" :key="format" :value="format">
@@ -28,7 +30,8 @@
                     <InputField type="number" v-model.number="tmpSettings.image.maxSizeMB" min="0" />
                 </Field>
             </FieldGroup>
-            <FieldGroup title="Excalidraw Settings" class="field-group">
+            <FieldGroup class="field-group">
+                <template #title>Excalidraw Settings</template>
                 <Field label="Save Interval (Seconds)" class="field">
                     <InputField v-model.number="tmpSettings.excalidraw.saveIntervalSeconds" min="0" type="number" />
                 </Field>
@@ -36,7 +39,8 @@
                     <InputCheckbox type="checkbox" v-model="tmpSettings.excalidraw.disableStyleOverride" />
                 </Field>
             </FieldGroup>
-            <FieldGroup title="Grid Settings" class="field-group">
+            <FieldGroup class="field-group">
+                <template #title>Grid Settings</template>
                 <Field label="Disable Filter" class="field">
                     <InputCheckbox type="checkbox" v-model="tmpSettings.grid.disableFilter" />
                 </Field>
@@ -50,7 +54,8 @@
                     <InputCheckbox type="checkbox" v-model="tmpSettings.grid.showCategoryUncategorized" />
                 </Field>
             </FieldGroup>
-            <FieldGroup title="Backup Settings (WIP - NOT WORKING YET)" class="field-group">
+            <FieldGroup class="field-group">
+                <template #title>Backup Settings (WIP - NOT WORKING YET)</template>
                 <Field label="Enable Auto Backup" class="field">
                     <InputCheckbox type="checkbox" v-model="tmpSettings.backup.enableAutoBackup" :disabled="true" />
                 </Field>
@@ -63,11 +68,18 @@
                     />
                 </Field>
             </FieldGroup>
-            <FieldGroup title="Clean Up" class="field-group">
+            <FieldGroup class="field-group">
+                <template #title>Clean Up</template>
                 <Field label="Delete all Tags" class="field">
                     <div class="settings-view-actions-tags">
                         <button @click="onDeleteAllTags">Delete All Tags</button>
-                        <div>All Current Tags: {{ tagCollectioNames }}</div>
+                        <div>All Current Tags: {{ tagCollectionNames }}</div>
+                    </div>
+                </Field>
+                <Field label="Delete all Images" class="field">
+                    <div class="settings-view-actions-tags">
+                        <button @click="onDeleteAllImages">Delete All Images</button>
+                        <div>Image Count: {{ imageStore.collection.length }}</div>
                     </div>
                 </Field>
             </FieldGroup>
@@ -86,9 +98,9 @@ import FieldGroup from '@render/components/core/FieldGroup.vue';
 import InputCheckbox from '@render/components/core/InputCheckbox.vue';
 import InputField from '@render/components/core/InputField.vue';
 import Topbar from '@render/components/layout/Topbar.vue';
-import router from '@render/router';
 import { useAppStore } from '@render/stores/appStore';
-import type { DialogModal, ModalActionCb } from '@render/stores/modalStore';
+import { useImageStore } from '@render/stores/imageStore';
+import type { ModalActionCb, ModalDialog } from '@render/stores/modalStore';
 import { useModalStore } from '@render/stores/modalStore';
 import { useSettingsStore } from '@render/stores/settingsStore';
 import { useTagStore } from '@render/stores/tagStore';
@@ -104,6 +116,7 @@ const settingsStore = useSettingsStore();
 const appStore = useAppStore();
 const tagStore = useTagStore();
 const modalStore = useModalStore();
+const imageStore = useImageStore();
 
 // --- STATES ---
 
@@ -111,7 +124,7 @@ const modalStore = useModalStore();
 // We use json parse/stringify to create a deep copy. Spread would only create a shallow copy
 // Instead structuredClone could be used
 const tmpSettings = ref<AppSettings>(JSON.parse(JSON.stringify(settingsStore.settings)));
-const tagCollectioNames = computed(() => tagStore.collection.map((tag) => tag.technical_name).join(', '));
+const tagCollectionNames = computed(() => tagStore.collection.map((tag) => tag.technical_name).join(', '));
 
 // --- COMPUTED ---
 
@@ -158,11 +171,7 @@ const onDefault = async () => {
                 modalStore.setModal(null);
             },
         } as ModalActionCb<void>,
-    } as DialogModal);
-};
-
-const onGoBack = () => {
-    router.back();
+    } as ModalDialog);
 };
 
 const onDeleteAllTags = async () => {
@@ -173,12 +182,32 @@ const onDeleteAllTags = async () => {
         onConfirm: {
             label: 'Confirm',
             cb: async (): Promise<void> => {
-                try {
-                    tagStore.collection.forEach(async (tag) => {
-                        await tagStore.deleteRecord(tag.id);
-                    });
-                } catch (error) {
-                    console.error('Error deleting all tags:', error);
+                tagStore.collection.forEach(async (tag) => {
+                    await tagStore.deleteRecord(tag.id);
+                });
+                modalStore.setModal(null);
+            },
+        } as ModalActionCb<void>,
+        onCancel: {
+            label: 'Cancel',
+            cb: () => {
+                modalStore.setModal(null);
+            },
+        } as ModalActionCb<void>,
+    } as ModalDialog);
+};
+
+const onDeleteAllImages = async () => {
+    modalStore.setModal({
+        title: 'Delete all images',
+        description: 'Are you sure you want to delete all images? This action can not be undone.',
+        type: 'dialog',
+        onConfirm: {
+            label: 'Confirm',
+            cb: async (): Promise<void> => {
+                const iArr = imageStore.collection;
+                for (const image of iArr) {
+                    await imageStore.deleteImage(image.id);
                 }
                 modalStore.setModal(null);
             },
@@ -189,7 +218,7 @@ const onDeleteAllTags = async () => {
                 modalStore.setModal(null);
             },
         } as ModalActionCb<void>,
-    } as DialogModal);
+    } as ModalDialog);
 };
 </script>
 

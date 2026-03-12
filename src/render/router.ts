@@ -1,6 +1,6 @@
+import HomeView from '@render/views/home/HomeView.vue';
+import SettingsView from '@render/views/settings/SettingsView.vue';
 import { createRouter, createWebHashHistory } from 'vue-router';
-import HomeView from './views/home/HomeView.vue';
-import SettingsView from './views/settings/SettingsView.vue';
 
 const router = createRouter({
     history: createWebHashHistory(),

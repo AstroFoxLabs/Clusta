@@ -1,25 +1,26 @@
-import { app, BrowserWindow } from 'electron';
-import log from 'electron-log/main.js';
+import '@main/ipcHandlers/ipcHandlers.js';
+import CleanUpService from '@main/services/CleanUpService.js';
+import DatabaseService from '@main/services/DatabaseService.js';
+import FileStorageService from '@main/services/FileStorageService.js';
+import LogService from '@main/services/LogService.js';
+import MigrationService from '@main/services/MigrationService.js';
+import SettingsService from '@main/services/SettingsService.js';
+import UpdateService from '@main/services/UpdateService.js';
+import dotenv from 'dotenv';
+import electron from 'electron';
+import Logger from 'electron-log/main.js';
 import path from 'path';
-import { fileURLToPath } from 'url';
-import './ipcHandlers/ipcHandlers.js';
-import CleanUpService from './services/CleanUpService.js';
-import DatabaseService from './services/DatabaseService.js';
-import FileStorageService from './services/FileStorageService.js';
-import { LogService } from './services/LogService.js';
-import { MigrationService } from './services/MigrationService.js';
-import SettingsService from './services/SettingsService.js';
-import { UpdateService } from './services/UpdateService.js';
 
-export let mainWindow: BrowserWindow | null = null;
-export const isProd = app.isPackaged; // True if the app is packaged
+const { app, BrowserWindow } = electron;
 
+export let mainWindow: electron.BrowserWindow | null = null;
+export const isProd = true; // True if the app is packaged
+
+dotenv.config();
+Logger.initialize();
+
+LogService.clearLogFile();
 LogService.info(`Application starting in ${isProd ? 'production' : 'development'} mode...`);
-
-const updateService = new UpdateService();
-updateService.checkForUpdates();
-
-log.initialize();
 
 const windowSettingsDev: Electron.BrowserWindowConstructorOptions = {
     width: 1600,
@@ -28,7 +29,7 @@ const windowSettingsDev: Electron.BrowserWindowConstructorOptions = {
         nodeIntegration: false, // Disables Node.js integration in Render
         contextIsolation: true, // Context-separation between Main and Render
         webSecurity: false, // enforces same-origin policy, CORS... - fails with vite dev server
-        preload: path.join(fileURLToPath(import.meta.url), '../../preload', 'preload.js'),
+        preload: path.join(__dirname, '../preload', 'preload.js'),
     },
     autoHideMenuBar: true,
     frame: false,
@@ -40,76 +41,61 @@ const windowSettingsProd: Electron.BrowserWindowConstructorOptions = {
     webPreferences: {
         nodeIntegration: false,
         contextIsolation: true,
-        webSecurity: true, // enforce same-origin policy
-        preload: path.join(fileURLToPath(import.meta.url), '../../preload', 'preload.js'),
+        webSecurity: true, // enforce same-origin policy / works only with file:// protocol, so it works in production
+        preload: path.join(__dirname, '../preload', 'preload.js'),
     },
     autoHideMenuBar: true,
     frame: false,
 };
 
 const createWindow = async () => {
-    try {
-        mainWindow = new BrowserWindow(isProd ? windowSettingsProd : windowSettingsDev);
-        if (!isProd) {
-            await mainWindow.loadURL('http://localhost:5173');
-            mainWindow.webContents.openDevTools({ mode: 'detach' });
+    mainWindow = new BrowserWindow(isProd ? windowSettingsProd : windowSettingsDev);
+    if (!isProd) {
+        mainWindow.webContents.openDevTools({ mode: 'detach' });
+        // Development can be built or run with Vite server
+        if (process.env.VITE_DEV_SERVER_URL) {
+            LogService.info('Loading from Vite dev server:', process.env.VITE_DEV_SERVER_URL);
+            await mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
         } else {
-            try {
-                await mainWindow.loadFile(path.join(fileURLToPath(import.meta.url), '../../render', 'index.html'));
-            } catch (err) {
-                LogService.error('Error loading index.html:', err);
-            }
+            LogService.info('Loading from local file in development mode');
+            await mainWindow.loadFile(path.join(__dirname, '../render', 'index.html'));
         }
-    } catch (err) {
-        LogService.error('Error creating main window:', err);
-        throw err;
+    } else {
+        await mainWindow.loadFile(path.join(__dirname, '../render', 'index.html'));
     }
 };
 
 const initDatabase = async () => {
-    try {
-        await DatabaseService.getInstance().init(DatabaseService.DB_PATH);
-    } catch (err) {
-        LogService.error('Error initializing database:', err);
-        throw err;
-    }
+    await DatabaseService.getInstance().init(DatabaseService.DB_PATH);
 };
 
 const initFilesystem = async () => {
-    try {
-        const settings = SettingsService.getInstance().getSettings();
-        if (!FileStorageService.pathExists(settings.paths.fileDefaultPath)) {
-            LogService.warn(`Directory ${settings.paths.fileDefaultPath} does not exist. Creating it now.`);
-            FileStorageService.createDir(settings.paths.fileDefaultPath);
-        }
-        if (!FileStorageService.pathExists(settings.paths.imageDefaultPath)) {
-            LogService.warn(`Directory ${settings.paths.imageDefaultPath} does not exist. Creating it now.`);
-            FileStorageService.createDir(settings.paths.imageDefaultPath);
-        }
+    const settings = SettingsService.getInstance().getSettings();
+    if (!FileStorageService.pathExists(settings.paths.images)) {
+        LogService.warn(`Directory ${settings.paths.images} does not exist. Creating it now.`);
+        FileStorageService.createDir('images');
+    }
 
-        if (!FileStorageService.pathExists(settings.paths.excalidrawDefaultPath)) {
-            LogService.warn(`Directory ${settings.paths.excalidrawDefaultPath} does not exist. Creating it now.`);
-            FileStorageService.createDir(settings.paths.excalidrawDefaultPath);
-        }
-    } catch (err) {
-        LogService.error('Error initializing filesystem:', err);
-        throw err;
+    if (!FileStorageService.pathExists(settings.paths.excalidraw)) {
+        LogService.warn(`Directory ${settings.paths.excalidraw} does not exist. Creating it now.`);
+        FileStorageService.createDir('excalidraw');
     }
 };
 
 const initMigrations = async () => {
-    try {
-        const migrationService = new MigrationService();
-        await migrationService.initializeMigrationTable();
-        await migrationService.runMigrations();
-    } catch (err) {
-        LogService.error('Error initializing migrations:', err);
-        throw err;
-    }
+    const migrationService = new MigrationService();
+    await migrationService.initializeMigrationTable();
+    await migrationService.runMigrations();
 };
 
 app.on('ready', async () => {
+    const updateService = new UpdateService();
     try {
+        try {
+            await updateService.checkForUpdates();
+        } catch (err) {
+            LogService.error('Failed to check for updates. Skipping:', err);
+        }
         await initDatabase();
         await initFilesystem();
         await initMigrations();
@@ -126,11 +112,6 @@ app.on('quit', () => {
     LogService.info('Application is quitting.');
 });
 
-app.on('before-quit', async () => {
-    LogService.info('Application is about to quit.');
-    await DatabaseService.getInstance().close();
-});
-
 // Needed for clean exit on macOS (Cause it doesn't close the app when closing the last window)
 app.on('window-all-closed', () => {
     LogService.info('All windows closed.');
@@ -139,10 +120,13 @@ app.on('window-all-closed', () => {
 
 // On macOS it's common to re-create a window in the app when the dock icon is clicked and there are no other windows open
 app.on('activate', async (event, hasVisibleWindows: boolean) => {
-    LogService.info('App activated.');
-    if (BrowserWindow.getAllWindows().length === 0) {
-        await createWindow();
-    } else if (mainWindow && !hasVisibleWindows) {
-        mainWindow.show();
+    try {
+        if (BrowserWindow.getAllWindows().length === 0) {
+            await createWindow();
+        } else if (mainWindow && !hasVisibleWindows) {
+            mainWindow.show();
+        }
+    } catch (err) {
+        LogService.error('Failed to create window on activate:', err);
     }
 });

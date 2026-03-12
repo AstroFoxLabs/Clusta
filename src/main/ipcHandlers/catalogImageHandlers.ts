@@ -1,8 +1,9 @@
 import { CatalogImage, ImageFilePayload } from '@shared/types.js';
-import DatabaseService from '../services/DatabaseService.js';
-import FileStorageService from '../services/FileStorageService.js';
-import ImageConversionService from '../services/ImageConversionService.js';
-import ValidationService from '../services/ValidationService.js';
+import DatabaseService from '@main/services/DatabaseService.js';
+import FileStorageService from '@main/services/FileStorageService.js';
+import ImageConversionService from '@main/services/ImageConversionService.js';
+import SettingsService from '@main/services/SettingsService.js';
+import ValidationService from '@main/services/ValidationService.js';
 import { register } from './ipcHandlers.js';
 
 register<{}, CatalogImage[]>('get-catalog-images-all', async () => {
@@ -48,7 +49,7 @@ register<{}, CatalogImage[]>('get-catalog-images-all', async () => {
         ORDER BY i.added_at DESC;
     `;
 
-    const rows = await DatabaseService.getInstance().all(sql, {});
+    const rows = await DatabaseService.getInstance().all(sql);
 
     if (!rows || rows.length === 0) {
         return [] as CatalogImage[];
@@ -68,7 +69,7 @@ register<{}, CatalogImage[]>('get-catalog-images-all', async () => {
     return images;
 });
 
-register<{ id: string }, CatalogImage | null>('get-catalog-image', async (event, { id }) => {
+register<{ id: string }, CatalogImage>('get-catalog-image', async (event, { id }) => {
     const sql = `
             SELECT
                 i.id,
@@ -117,7 +118,7 @@ register<{ id: string }, CatalogImage | null>('get-catalog-image', async (event,
     const row = await DatabaseService.getInstance().get(sql, [id]);
 
     if (!row) {
-        return null;
+        throw new Error(`Image with id ${id} not found`);
     }
 
     const image: CatalogImage = {
@@ -134,12 +135,11 @@ register<{ id: string }, CatalogImage | null>('get-catalog-image', async (event,
     return image;
 });
 
-register<{ name: string; hash: string }, CatalogImage>('create-catalog-image', async (event, { name, hash }) => {
+register<{ name: string; hash: string }, String>('create-catalog-image', async (event, { name, hash }) => {
     const sql = `INSERT INTO images (name, hash) VALUES (?, ?);`;
-    await DatabaseService.getInstance().run(sql, [name, hash]);
-
-    const recordSql = `SELECT * FROM images WHERE hash = ? LIMIT 1;`;
-    return (await DatabaseService.getInstance().get(recordSql, [hash])) as CatalogImage;
+    const lastID = await DatabaseService.getInstance().run(sql, [name, hash]);
+    if (lastID) return lastID.toString() as String;
+    else throw new Error('Failed to create catalog image record');
 });
 
 register<{ payload: ImageFilePayload }, ImageFilePayload>('persist-image-file', async (event, { payload }) => {
@@ -158,25 +158,18 @@ register<{ payload: ImageFilePayload }, ImageFilePayload>('persist-image-file', 
         throw new Error('Failed to convert image to webp format');
     }
 
-    await FileStorageService.store(`${payload.hash}.${process.env.IMAGE_CONVERSION_TYPE}`, webpBuffer, '/images');
+    FileStorageService.store(
+        `${payload.hash}.${SettingsService.getInstance().getSettings().image.conversion.format}`,
+        webpBuffer,
+        'images',
+    );
     return payload;
 });
 
-register<{ imageId: string; newName: string }, void>(
-    'update-catalog-image-name',
-    async (event, { imageId, newName }) => {
-        const sql = `UPDATE images SET name = ?,  updated_at = CURRENT_TIMESTAMP WHERE id = ?`;
-        await DatabaseService.getInstance().run(sql, [newName, imageId]);
-    },
-);
-
-register<{ imageId: string; isFavorite: boolean }, void>(
-    'update-catalog-image-favorite',
-    async (event, { isFavorite, imageId }) => {
-        const sql = `UPDATE images SET is_favorite = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`;
-        await DatabaseService.getInstance().run(sql, [isFavorite ? 1 : 0, imageId]);
-    },
-);
+register<{ image: CatalogImage }, void>('update-catalog-image', async (event, { image }) => {
+    const sql = `UPDATE images SET name = ?, is_favorite = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`;
+    await DatabaseService.getInstance().run(sql, [image.name, image.is_favorite ? 1 : 0, image.id]);
+});
 
 register<{ id: string; onlyRecord: boolean }, void>('delete-image', async (event, { id, onlyRecord }) => {
     const imageSql = `SELECT * FROM images WHERE id = ? LIMIT 1`;
@@ -191,5 +184,8 @@ register<{ id: string; onlyRecord: boolean }, void>('delete-image', async (event
 
     if (onlyRecord) return;
 
-    FileStorageService.delete(`${image.hash}.${process.env.IMAGE_CONVERSION_TYPE}`, '/images');
+    FileStorageService.delete(
+        `${image.hash}.${SettingsService.getInstance().getSettings().image.conversion.format}`,
+        'images',
+    );
 });

@@ -16,96 +16,94 @@
 </template>
 
 <script setup lang="ts">
-    import { onMounted, onBeforeUnmount, ref, computed } from 'vue';
-    import { useAppStore } from '../../stores/appStore';
+import { useAppStore } from '@render/stores/appStore';
+import { computed, onBeforeUnmount, onMounted } from 'vue';
 
-    // --- PROPS & EMITS ---
+// --- PROPS & EMITS ---
 
-    // --- STORES ---
+// --- STORES ---
 
-    const appStore = useAppStore();
+const appStore = useAppStore();
 
-    // --- STATES ---
+// --- STATES ---
 
-    // --- COMPUTED ---
+// --- COMPUTED ---
 
-    const position = computed(() => {
-        if (appStore.rightClickMenu) {
-            return {
-                left: `${appStore.rightClickMenu.x}px`,
-                top: `${appStore.rightClickMenu.y}px`,
-            };
-        }
-        return {};
-    });
-
-    // --- WATCHERS ---
-
-    // --- METHODS ---
-    function closeMenu() {
-        appStore.setRightClickMenu(null);
+const position = computed(() => {
+    if (appStore.rightClickMenu) {
+        return {
+            left: `${appStore.rightClickMenu.x}px`,
+            top: `${appStore.rightClickMenu.y}px`,
+        };
     }
+    return {};
+});
 
-    function onGlobalPointerDown(e: PointerEvent) {
-        const target = e.target as HTMLElement;
-        // If click is outside menu -> close
-        if (!target.closest('.right-click-menu')) {
-            closeMenu();
-        }
-    }
+// --- WATCHERS ---
 
-    function onKeyDown(e: KeyboardEvent) {
-        if (e.key === 'Escape' && appStore.rightClickMenu) {
-            closeMenu();
-        }
-    }
+// --- METHODS ---
+const closeMenu = () => {
+    appStore.setRightClickMenu(null);
+};
 
-    function onMenuItemClick(callback: () => void) {
-        callback();
+const onGlobalPointerDown = (e: PointerEvent) => {
+    const target = e.target as HTMLElement;
+    if (!target.closest('.right-click-menu')) {
         closeMenu();
     }
+};
 
-    onMounted(() => {
-        // Using capture to ensure this runs before other pointerdown handlers
-        // So that the menu closes even if other handlers stop propagation
-        window.addEventListener('pointerdown', onGlobalPointerDown, { capture: true });
-        window.addEventListener('keydown', onKeyDown);
-    });
+const onKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Escape' && appStore.rightClickMenu) {
+        closeMenu();
+    }
+};
 
-    onBeforeUnmount(() => {
-        window.removeEventListener('pointerdown', onGlobalPointerDown, { capture: true });
-        window.removeEventListener('keydown', onKeyDown);
-    });
+const onMenuItemClick = (cb: () => void) => {
+    cb();
+    closeMenu();
+};
+
+onMounted(() => {
+    // capture => run before other handlers => closes even if other handlers call stopPropagation
+    window.addEventListener('pointerdown', onGlobalPointerDown, { capture: true });
+    window.addEventListener('keydown', onKeyDown);
+});
+
+onBeforeUnmount(() => {
+    window.removeEventListener('pointerdown', onGlobalPointerDown, { capture: true });
+    window.removeEventListener('keydown', onKeyDown);
+});
 </script>
 
 <style scoped lang="scss">
-    @use '../../styles/_variables.scss' as *;
+@use '@render/styles/variables' as *;
 
-    .right-click-menu {
-        background-color: $primary-600;
-        width: 200px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-        position: fixed;
-        z-index: $z-index-right-click-menu;
-        font-size: 1rem;
-        border-radius: $border-radius-sm;
+.right-click-menu {
+    background-color: $primary-600;
+    width: 200px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    position: fixed;
+    z-index: $z-index-right-click-menu;
+    font-size: 1rem;
+    border-radius: $border-radius-sm;
 
-        &-list {
-            display: flex;
-            flex-direction: column;
+    &-list {
+        display: flex;
+        flex-direction: column;
 
-            &-item {
-                padding: 0.75rem;
-                cursor: pointer;
+        &-item {
+            padding: 0.75rem;
+            cursor: pointer;
 
-                &:not(:last-child) {
-                    border-bottom: 1px solid $white-trans-10;
-                }
+            &:not(:last-child) {
+                border-bottom: 1px solid $white-trans-10;
+            }
 
-                &:hover {
-                    background-color: $primary-400;
-                }
+            &:hover {
+                background-color: $primary-400;
             }
         }
     }
+}
 </style>

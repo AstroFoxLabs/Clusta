@@ -1,7 +1,9 @@
-import { app } from 'electron';
+import electron from 'electron';
 import path from 'path';
 import sqlite3 from 'sqlite3';
-import { LogService } from './LogService.js';
+import LogService from './LogService.js';
+
+const { app } = electron;
 
 export default class DatabaseService {
     // %appdata%/roaming/refarchive/app.db
@@ -25,6 +27,7 @@ export default class DatabaseService {
                     LogService.error('Error opening database:', err);
                     reject(err);
                 } else {
+                    LogService.info('Database initialized at', dbPath);
                     resolve();
                 }
             });
@@ -48,7 +51,7 @@ export default class DatabaseService {
         });
     }
 
-    run(sql: any, params: any): Promise<void> {
+    run(sql: any, params: any): Promise<void | number> {
         return new Promise((resolve, reject) => {
             if (this.db) {
                 this.db.run(sql, params || [], function (err) {
@@ -56,6 +59,8 @@ export default class DatabaseService {
                         LogService.error(`Error running sql: ${sql} With params: ${JSON.stringify(params)}`, err);
                         reject(err);
                     } else {
+                        // Retuns the last inserted id if the statement was an insert, otherwise just resolves
+                        if (this.lastID) resolve(this.lastID);
                         resolve();
                     }
                 });
@@ -65,7 +70,7 @@ export default class DatabaseService {
         });
     }
 
-    all(sql: any, params: any): Promise<any[]> {
+    all(sql: any, params: any = []): Promise<any[]> {
         return new Promise((resolve, reject) => {
             if (this.db) {
                 this.db.all(sql, params || [], (err, rows) => {

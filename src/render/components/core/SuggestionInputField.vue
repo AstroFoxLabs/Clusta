@@ -6,7 +6,7 @@
         @on-update-results="onUpdateResults"
         ref="refInputField"
     >
-        <template #suggestions>
+        <template #fuzzy-search-suggestions>
             <datalist id="suggestions">
                 <option v-for="hit in hits" :key="hit" :value="hit"></option>
             </datalist>
@@ -41,7 +41,7 @@ const refInputField = useTemplateRef('refInputField');
 // --- METHODS ---
 
 const onUpdateResults = (results: Array<any>) => {
-    hits.value = results;
+    hits.value = [...results];
 };
 
 defineExpose({

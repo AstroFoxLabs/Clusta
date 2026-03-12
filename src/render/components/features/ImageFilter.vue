@@ -7,7 +7,6 @@
             :filter-keys="enabledKeys"
             class="image-filter-search"
         />
-
         <div class="image-filter-toggles">
             <ToggleButton
                 v-for="filterKey in props.filterKeys"
@@ -36,10 +35,6 @@ import { onMounted, ref, watch } from 'vue';
 // --- PROPS & EMITS ---
 
 const props = defineProps({
-    showFilterOptions: {
-        type: Boolean,
-        default: true,
-    },
     filterKeys: {
         type: Array as () => FuzzySearchKey[],
         required: false,
@@ -77,7 +72,7 @@ const enabledKeys = ref<FuzzySearchKey[]>(props.filterKeys);
 watch(
     () => [categoryStore.selectedCategoryId, searchQueryResults.value, settingsStore.settings.grid],
     () => {
-        applyFilters(props.images);
+        applyFilters([...props.images]);
         onUpdate();
     },
     { deep: true },
@@ -124,14 +119,22 @@ const sortByFavorites = (i: CatalogImage[]): CatalogImage[] => {
     });
 };
 
+const sortingByAddedDate = (i: CatalogImage[]): CatalogImage[] => {
+    return i.sort((a, b) => {
+        const aDate = new Date(a.added_at).getTime();
+        const bDate = new Date(b.added_at).getTime();
+        return bDate - aDate;
+    });
+};
+
 const applyFilters = (rawImages: CatalogImage[]) => {
-    let tmpImages = rawImages;
-    tmpImages = filterBySelectedCategory(tmpImages);
-    tmpImages = filterBySearchQueryResults(tmpImages);
+    rawImages = filterBySelectedCategory(rawImages);
+    rawImages = filterBySearchQueryResults(rawImages);
+    rawImages = sortingByAddedDate(rawImages);
     if (settingsStore.settings.grid.showFavoritesFirst) {
-        tmpImages = sortByFavorites(tmpImages);
+        rawImages = sortByFavorites(rawImages);
     }
-    filteredImages.value = tmpImages;
+    filteredImages.value = rawImages;
 };
 
 const onUpdate = () => {

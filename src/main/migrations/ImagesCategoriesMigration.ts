@@ -1,5 +1,5 @@
-import { Migration } from '../services/MigrationService.js';
-import DatabaseService from '../services/DatabaseService.js';
+import DatabaseService from '@main/services/DatabaseService.js';
+import { Migration } from '@main/services/MigrationService.js';
 
 export default class ImagesCategoriesMigration implements Migration {
     name = '004_images_categories_migration';
@@ -16,6 +16,5 @@ export default class ImagesCategoriesMigration implements Migration {
                 ')',
             [],
         );
-        return;
     }
 }

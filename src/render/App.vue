@@ -4,23 +4,35 @@
             <RouterView />
         </div>
         <div class="app-event-log">
-            <EventNotification />
+            <div class="app-event-log-toast">
+                <div
+                    class="app-event-log-toast-message"
+                    v-for="message in notificationStore.eventMessages"
+                    :key="message"
+                >
+                    {{ message }}
+                </div>
+                <slot></slot>
+            </div>
         </div>
         <RightClickMenu />
-        <InputModal />
-        <DialogModal />
+        <ModalInput v-if="modalStore.modal" />
+        <ModalDialog v-if="modalStore.modal" />
     </div>
 </template>
 
 <script lang="ts" setup>
-import DialogModal from './components/core/DialogModal.vue';
-import InputModal from './components/core/InputModal.vue';
-import EventNotification from './components/features/NotificationToast.vue';
-import RightClickMenu from './components/features/RightClickMenu.vue';
+import ModalDialog from '@render/components/core/ModalDialog.vue';
+import ModalInput from '@render/components/core/ModalInput.vue';
+import RightClickMenu from '@render/components/features/RightClickMenu.vue';
+import { useModalStore } from '@render/stores/modalStore';
+import { useNotificationStore } from '@render/stores/notificationStore';
+const notificationStore = useNotificationStore();
+const modalStore = useModalStore();
 </script>
 
 <style lang="scss">
-@use './styles/_variables.scss' as *;
+@use '@render/styles/variables' as *;
 
 .app {
     display: flex;
@@ -35,9 +47,22 @@ import RightClickMenu from './components/features/RightClickMenu.vue';
 
     &-event-log {
         position: fixed;
-        bottom: 1rem;
-        right: 1rem;
+        bottom: 4rem;
+        right: 4rem;
         z-index: $z-index-toast;
+
+        &-toast {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+
+            &-message {
+                padding: 1rem;
+                background-color: rgba(22, 38, 41, 0.75);
+                color: $white;
+                border-radius: 0.25rem;
+            }
+        }
     }
 }
 </style>

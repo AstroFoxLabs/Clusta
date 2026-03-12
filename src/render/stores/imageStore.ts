@@ -1,10 +1,14 @@
-import { ref } from 'vue';
-import { defineStore } from 'pinia';
-import { CatalogImage, ImageFilePayload, IpcResponse } from '@shared/types';
 import { ipcAPI } from '@render/services/ipcAPIService';
+import { upsert } from '@render/utils';
+import { CatalogImage, ImageFilePayload } from '@shared/types';
+import { defineStore } from 'pinia';
+import { ref } from 'vue';
+import { useNotificationStore } from './notificationStore';
 
 export const useImageStore = defineStore('image', () => {
     /* ---------------------------- STORES ---------------------------- */
+
+    const notificationStore = useNotificationStore();
 
     /* ---------------------------- STATES ---------------------------- */
 
@@ -14,111 +18,65 @@ export const useImageStore = defineStore('image', () => {
 
     /* ---------------------------- INTERNAL ------------------------- */
 
-    const upsert = (images: CatalogImage[]): void => {
-        images.forEach((image) => {
-            const index = collection.value.findIndex((i) => i.id == image.id);
-            if (index === -1) {
-                collection.value.push(image);
-            } else {
-                Object.assign(collection.value[index], image);
-            }
-        });
-    };
-
     /* ----------------------------- ACTIONS ------------------------- */
 
     const fetchAll = async (): Promise<CatalogImage[]> => {
         try {
-            return await ipcAPI<CatalogImage[]>(() => window.catalogImage.all());
+            const res = await ipcAPI<CatalogImage[]>(() => window.catalogImage.all());
+            return upsert([...res], collection.value) as CatalogImage[];
         } catch (error) {
-            console.error('Failed to fetch all images:', error);
-            return [];
+            notificationStore.addEventMessage('Failed to fetch images');
+            console.error('Error fetching images:', error);
+            throw error;
         }
     };
 
-    const fetchById = async (id: string): Promise<CatalogImage | null> => {
-        try {
-            return await ipcAPI<CatalogImage>(() => window.catalogImage.get(id));
-        } catch (error) {
-            console.error(`Failed to fetch image with id ${id}:`, error);
-            return null;
-        }
-    };
-
-    const createImage = async (
-        name: string,
-        payload: ImageFilePayload,
-    ): Promise<{ record: CatalogImage; payload: ImageFilePayload }> => {
+    const create = async (name: string, payload: ImageFilePayload): Promise<CatalogImage> => {
         const createRecord = async (name: string, hash: string): Promise<CatalogImage> => {
-            try {
-                return await ipcAPI<CatalogImage>(() => window.catalogImage.create(name, hash));
-            } catch (error) {
-                console.error('Failed to create image record:', error);
-                throw error;
-            }
+            const id = await ipcAPI<string>(() => window.catalogImage.create(name, hash));
+            return await ipcAPI<CatalogImage>(() => window.catalogImage.get(id));
         };
 
-        const persistFile = async (payload: ImageFilePayload, imageID: string): Promise<ImageFilePayload> => {
+        const persistFile = async (payload: ImageFilePayload, imageID: string): Promise<void> => {
             try {
-                return await ipcAPI<ImageFilePayload>(() => window.catalogImage.persistFile(payload));
+                await ipcAPI<ImageFilePayload>(() => window.catalogImage.persistFile(payload));
             } catch (error) {
-                console.error('Failed to store image file:', error);
-                console.warn('Deleting created record. Error, that file is not existing is normal.');
-                await deleteImage(imageID);
+                await deleteImage(imageID, true);
+                console.error('Error persisting image file:', error);
                 throw error;
             }
         };
 
         try {
             const record = await createRecord(name, payload.hash);
-            const iPayload = await persistFile(payload, record.id);
-            upsert([record]);
-            return { record, payload: iPayload };
+            await persistFile(payload, record.id);
+            return upsert([record], collection.value) as CatalogImage;
         } catch (error) {
-            console.error('Image could not be created.', error);
+            notificationStore.addEventMessage('Failed to create image');
+            console.error('Error creating image:', error);
             throw error;
         }
     };
 
-    const updateName = async (id: string, newName: string): Promise<void> => {
+    const update = async (image: CatalogImage): Promise<CatalogImage> => {
         try {
-            await ipcAPI<void>(() => window.catalogImage.updateName(id, newName));
-            const image = collection.value.find((i) => i.id === id);
-            if (image) {
-                image.name = newName;
-            } else {
-                throw new Error('Name update was successful but image was not found in local store to update name');
-            }
+            await ipcAPI<CatalogImage>(() => window.catalogImage.update(JSON.parse(JSON.stringify(image))));
+            const updatedImage = await ipcAPI<CatalogImage>(() => window.catalogImage.get(image.id));
+            return upsert([updatedImage], collection.value) as CatalogImage;
         } catch (error) {
-            console.error(`Failed to update name for image with id ${id}:`, error);
+            notificationStore.addEventMessage('Failed to update image');
+            console.error('Error updating image:', error);
             throw error;
         }
     };
 
-    const updateFavorite = async (id: string, isFavorite: boolean): Promise<boolean> => {
+    const deleteImage = async (id: string, onlyRecord: boolean = false): Promise<void> => {
         try {
-            await ipcAPI<void>(() => window.catalogImage.updateFavorite(id, isFavorite));
-            const image = collection.value.find((i) => i.id === id);
-            if (image) {
-                image.is_favorite = isFavorite;
-            } else {
-                throw new Error(
-                    'Favorite update was successful but image was not found in local store to update favorite status',
-                );
-            }
-        } catch (error) {
-            console.error(`Failed to update favorite status for image with id ${id}:`, error);
-            throw error;
-        }
-        return isFavorite;
-    };
-
-    const deleteImage = async (id: string): Promise<void> => {
-        try {
-            await ipcAPI<void>(() => window.catalogImage.delete(id, true));
+            await ipcAPI<void>(() => window.catalogImage.delete(id, onlyRecord));
             collection.value = collection.value.filter((i) => i.id !== id);
         } catch (error) {
-            console.error(`Failed to delete image with id ${id}:`, error);
+            notificationStore.addEventMessage('Failed to delete image');
+            console.error('Error deleting image:', error);
             throw error;
         }
     };
@@ -126,11 +84,9 @@ export const useImageStore = defineStore('image', () => {
     return {
         collection,
         fetchAll,
-        fetchById,
         deleteImage,
         upsert,
-        updateName,
-        updateFavorite,
-        createImage,
+        update,
+        create,
     };
 });

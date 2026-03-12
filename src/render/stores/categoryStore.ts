@@ -1,14 +1,16 @@
-import { ref } from 'vue';
-import { defineStore } from 'pinia';
-import { IpcResponse, CatalogCategory } from '@shared/types';
-import { useImageStore } from './../stores/imageStore';
-import { displayNameToTechnicalName } from '@render/utils/utils';
 import { ipcAPI } from '@render/services/ipcAPIService';
+import { displayNameToTechnicalName, upsert } from '@render/utils';
+import { CatalogCategory } from '@shared/types';
+import { defineStore } from 'pinia';
+import { ref } from 'vue';
+import { useImageStore } from './imageStore';
+import { useNotificationStore } from './notificationStore';
 
 export const useCategoryStore = defineStore('category', () => {
     /* ---------------------------- STORES ---------------------------- */
 
     const imageStore = useImageStore();
+    const notificationStore = useNotificationStore();
 
     /* ---------------------------- STATES ---------------------------- */
 
@@ -19,22 +21,11 @@ export const useCategoryStore = defineStore('category', () => {
 
     /* ---------------------------- INTERNALS ------------------------- */
 
-    const upsert = (categories: CatalogCategory[]): void => {
-        categories.forEach((category) => {
-            const index = collection.value.findIndex((c) => c.id == category.id);
-            if (index === -1) {
-                collection.value.push(category);
-            } else {
-                Object.assign(collection.value[index], category);
-            }
-        });
-    };
-
     const setSelectedCategoryId = (id: string): void => {
         if (collection.value.map((c) => c.id).includes(id) || id === 'all' || id === 'uncategorized') {
             selectedCategoryId.value = id;
         } else {
-            console.error(`Attempted to set selected category ID to ${id}, but it does not exist in the store.`);
+            throw new Error(`Category with id ${id} does not exist in the store`);
         }
     };
 
@@ -42,32 +33,25 @@ export const useCategoryStore = defineStore('category', () => {
 
     const fetchAll = async (): Promise<CatalogCategory[]> => {
         try {
-            return await ipcAPI<CatalogCategory[]>(() => window.catalogCategory.all());
+            const res = await ipcAPI<CatalogCategory[]>(() => window.catalogCategory.all());
+            return upsert([...res], collection.value) as CatalogCategory[];
         } catch (error) {
-            console.error('Failed to fetch all categories:', error);
-            return [];
+            notificationStore.addEventMessage('Failed to fetch categories');
+            throw error;
         }
     };
 
-    const fetchById = async (id: string): Promise<CatalogCategory | null> => {
+    const create = async (displayName: string): Promise<CatalogCategory> => {
         try {
-            return await ipcAPI<CatalogCategory>(() => window.catalogCategory.get(id));
-        } catch (error) {
-            console.error(`Failed to fetch category with id ${id}:`, error);
-            return null;
-        }
-    };
-
-    const create = async (displayName: string): Promise<string> => {
-        try {
-            const technicalName = displayNameToTechnicalName(displayName);
-            const category = await ipcAPI<CatalogCategory>(() =>
-                window.catalogCategory.create(displayName, technicalName),
+            const id = await ipcAPI<string>(() =>
+                window.catalogCategory.create(displayName, displayNameToTechnicalName(displayName)),
             );
-            upsert([category]);
-            return category.id;
+            const newCategory = await ipcAPI<CatalogCategory>(() => window.catalogCategory.get(id));
+            upsert([newCategory], collection.value);
+            return newCategory;
         } catch (error) {
-            console.error('Failed to save category:', error);
+            notificationStore.addEventMessage('Failed to create category');
+            console.error('Error creating category:', error);
             throw error;
         }
     };
@@ -79,11 +63,10 @@ export const useCategoryStore = defineStore('category', () => {
             const category = collection.value.find((cat) => cat.id === categoryId);
             if (image && category) {
                 image.categories = [...(image.categories ?? []), category];
-            } else {
-                throw new Error('Image or category not found in store after assigning category to image');
             }
         } catch (error) {
-            console.error(`Failed to assign category ${categoryId} to image ${imageId}:`, error);
+            notificationStore.addEventMessage('Failed to assign category to image');
+            console.error('Error assigning category to image:', error);
             throw error;
         }
     };
@@ -94,11 +77,10 @@ export const useCategoryStore = defineStore('category', () => {
             const image = imageStore.collection.find((img) => img.id === imageId);
             if (image) {
                 image.categories = image.categories?.filter((c) => c.id !== categoryId);
-            } else {
-                throw new Error('Image not found in store after removing category from image');
             }
         } catch (error) {
-            console.error(`Failed to remove category ${categoryId} from image ${imageId}:`, error);
+            notificationStore.addEventMessage('Failed to unassign category from image');
+            console.error('Error unassigning category from image:', error);
             throw error;
         }
     };
@@ -108,26 +90,20 @@ export const useCategoryStore = defineStore('category', () => {
             await ipcAPI<void>(() => window.catalogCategory.delete(categoryId));
             collection.value = collection.value.filter((c) => c.id !== categoryId);
         } catch (error) {
-            console.error(`Failed to delete category with id ${categoryId}:`, error);
+            notificationStore.addEventMessage('Failed to delete category');
+            console.error('Error deleting category:', error);
             throw error;
         }
     };
 
-    const updateName = async (categoryId: string, displayName: string): Promise<void> => {
+    const update = async (category: CatalogCategory): Promise<CatalogCategory> => {
         try {
-            const technicalName = displayNameToTechnicalName(displayName);
-            await ipcAPI<CatalogCategory>(() =>
-                window.catalogCategory.updateName(categoryId, displayName, technicalName),
-            );
-            const index = collection.value.findIndex((c) => c.id === categoryId);
-            if (index !== -1) {
-                collection.value[index].technical_name = technicalName;
-                collection.value[index].display_name = displayName;
-            } else {
-                throw new Error('Category not found in store after updating category name');
-            }
+            await ipcAPI<CatalogCategory>(() => window.catalogCategory.update(JSON.parse(JSON.stringify(category))));
+            const updatedCategory = await ipcAPI<CatalogCategory>(() => window.catalogCategory.get(category.id));
+            return upsert([updatedCategory], collection.value) as CatalogCategory;
         } catch (error) {
-            console.error(`Failed to update category with id ${categoryId}:`, error);
+            notificationStore.addEventMessage('Failed to update category');
+            console.error('Error updating category:', error);
             throw error;
         }
     };
@@ -137,12 +113,11 @@ export const useCategoryStore = defineStore('category', () => {
         selectedCategoryId,
         upsert,
         fetchAll,
-        fetchById,
         create,
+        update,
         assignToImage,
         unassignFromImage,
         setSelectedCategoryId,
         deleteRecord,
-        updateName,
     };
 });

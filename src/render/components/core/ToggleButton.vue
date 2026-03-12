@@ -11,61 +11,61 @@
 </template>
 
 <script setup lang="ts">
-    import { ref } from 'vue';
+import { ref } from 'vue';
 
-    export interface ToggleButtonItem {
-        state: boolean;
-        displayValue: string;
-        value: unknown;
-    }
+export interface ToggleButtonItem {
+    state: boolean;
+    displayValue: string;
+    value: unknown;
+}
 
-    // --- PROPS & EMITS ---
+// --- PROPS & EMITS ---
 
-    const props = defineProps({
-        item: {
-            type: Object as () => ToggleButtonItem,
-            required: true,
-        },
-    });
+const props = defineProps({
+    item: {
+        type: Object as () => ToggleButtonItem,
+        required: true,
+    },
+});
 
-    const emits = defineEmits(['onChange']);
-    const state = ref(props.item.state);
+const emits = defineEmits(['onChange']);
+const state = ref(props.item.state);
 
-    const model = defineModel({
-        type: Boolean,
-        default: false,
-    });
+const model = defineModel({
+    type: Boolean,
+    default: false,
+});
 
-    // --- STORES ---
+// --- STORES ---
 
-    // --- STATES ---
+// --- STATES ---
 
-    // --- COMPUTED ---
+// --- COMPUTED ---
 
-    // --- WATCHERS ---
+// --- WATCHERS ---
 
-    // --- METHODS ---
+// --- METHODS ---
 </script>
 
 <style scoped lang="scss">
-    @use '../../styles/variables' as *;
+@use '@render/styles/variables' as *;
 
-    .toggle-button {
-        color: $white-400;
-        border-radius: $border-radius-md;
-        background-color: transparent;
-        color: $white;
-        font-size: inherit;
-        outline: 2px solid $accent-400;
+.toggle-button {
+    color: $white-400;
+    border-radius: $border-radius-md;
+    background-color: transparent;
+    color: $white;
+    font-size: inherit;
+    outline: 2px solid $accent-400;
 
-        &:hover {
-            cursor: pointer;
-            filter: brightness(1.1);
-        }
-
-        &.disable {
-            color: $white-trans-50;
-            outline: 2px solid $primary-700;
-        }
+    &:hover {
+        cursor: pointer;
+        filter: brightness(1.1);
     }
+
+    &.disable {
+        color: $white-trans-75;
+        outline: 2px solid $white-trans-25;
+    }
+}
 </style>

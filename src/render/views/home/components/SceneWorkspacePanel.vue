@@ -13,7 +13,7 @@
                 }"
             />
             <InlineButtonInput @on-submit="onSubmitNewScene" class="scene-workspace-panel-scenes-add">
-                <span class="codicon codicon-add"></span>
+                <Icon codicon-name="add"></Icon>
             </InlineButtonInput>
         </div>
         <Excalidraw v-if="excalidrawStore.selectedScene" />
@@ -21,133 +21,155 @@
 </template>
 
 <script setup lang="ts">
-    import Excalidraw from '@render/components/features/Excalidraw.vue';
-    import { useExcalidrawStore } from '@render/stores/excalidrawStore';
-    import { useModalStore } from '@render/stores/modalStore';
-    import { useAppStore } from '@render/stores/appStore';
-    import type { DialogModal, InputModal } from '@render/stores/modalStore';
-    import type { RightClickMenu } from '@render/stores/appStore';
-    import InlineButtonInput from '@render/components/core/InlineButtonInput.vue';
-    import type { ExcalidrawScene } from '@shared/types';
-    import ToggleButton from '@render/components/core/ToggleButton.vue';
+import Icon from '@render/components/core/Icon.vue';
+import InlineButtonInput from '@render/components/core/InlineButtonInput.vue';
+import ToggleButton from '@render/components/core/ToggleButton.vue';
+import Excalidraw from '@render/components/features/Excalidraw.vue';
+import type { RightClickMenu } from '@render/stores/appStore';
+import { useAppStore } from '@render/stores/appStore';
+import { useExcalidrawStore } from '@render/stores/excalidrawStore';
+import type { ModalDialog, ModalInput } from '@render/stores/modalStore';
+import { useModalStore } from '@render/stores/modalStore';
 
-    // --- PROPS & EMITS ---
+// --- PROPS & EMITS ---
 
-    // --- STORES ---
+// --- STORES ---
 
-    // --- STATES ---
+// --- STATES ---
 
-    const appStore = useAppStore();
-    const excalidrawStore = useExcalidrawStore();
-    const modalStore = useModalStore();
+const appStore = useAppStore();
+const excalidrawStore = useExcalidrawStore();
+const modalStore = useModalStore();
 
-    // --- COMPUTED ---
+// --- COMPUTED ---
 
-    // --- WATCHERS ---
+// --- WATCHERS ---
 
-    // --- METHODS ---
+// --- METHODS ---
 
-    const onSelectScene = (e: PointerEvent, uuid: string) => {
-        const scene = excalidrawStore.scenes.find((s) => s.uuid === uuid);
-        if (!scene) {
-            console.warn('Selected scene not found for UUID:', uuid);
-            return;
-        }
-        excalidrawStore.selectScene(scene);
-    };
+const onSelectScene = (e: PointerEvent, uuid: string) => {
+    const scene = excalidrawStore.scenes.find((s) => s.uuid === uuid);
+    if (!scene) {
+        console.warn('Selected scene not found for UUID:', uuid);
+        return;
+    }
+    excalidrawStore.selectScene(scene);
+};
 
-    const onSceneRightClick = (e: PointerEvent, uuid: string) => {
-        if (uuid === 'uncategorized' || uuid === 'all') {
-            return;
-        }
-        appStore.setRightClickMenu({
-            x: e.clientX,
-            y: e.clientY,
-            cb: [
-                {
-                    label: 'Rename Scene',
-                    cb: async () => {
-                        modalStore.setModal({
-                            title: 'Rename Scene',
-                            description: 'Enter a new name for the scene:',
-                            type: 'input',
-                            inputLabel: 'Scene Name',
-                            inputPlaceholder: 'New scene name',
-                            initialValue: excalidrawStore.scenes.find((s) => s.uuid === uuid)?.name,
-                            onConfirm: {
-                                label: 'Confirm',
-                                cb: async (newName: string) => {
-                                    await excalidrawStore.updateName(uuid, newName);
-                                    modalStore.setModal(null);
-                                },
+const onSceneRightClick = (e: PointerEvent, uuid: string) => {
+    appStore.setRightClickMenu({
+        x: e.clientX,
+        y: e.clientY,
+        cb: [
+            {
+                label: 'Rename Scene',
+                cb: async () => {
+                    const s = excalidrawStore.scenes.find((s) => s.uuid === uuid);
+                    if (!s) {
+                        console.warn('Scene not found for UUID:', uuid);
+                        return;
+                    }
+                    modalStore.setModal({
+                        title: 'Rename Scene',
+                        description: 'Enter a new name for the scene:',
+                        type: 'input',
+                        inputLabel: 'Scene Name',
+                        inputPlaceholder: 'New scene name',
+                        initialValue: excalidrawStore.scenes.find((s) => s.uuid === uuid)?.name,
+                        onConfirm: {
+                            label: 'Confirm',
+                            cb: async (newName: string) => {
+                                await excalidrawStore.updateRecord({ ...s, name: newName });
+                                modalStore.setModal(null);
                             },
-                            onCancel: {
-                                label: 'Cancel',
-                                cb: () => {
-                                    modalStore.setModal(null);
-                                },
+                        },
+                        onCancel: {
+                            label: 'Cancel',
+                            cb: () => {
+                                modalStore.setModal(null);
                             },
-                        } as InputModal);
-                    },
+                        },
+                    } as ModalInput);
                 },
-                {
-                    label: 'Delete Scene',
-                    cb: async () => {
-                        modalStore.setModal({
-                            title: 'Delete Scene',
-                            description: 'Are you sure you want to delete this scene?',
-                            type: 'dialog',
-                            onConfirm: {
-                                label: 'Delete',
-                                cb: async () => {
-                                    await excalidrawStore.deleteSceneByUUID(uuid);
-                                    modalStore.setModal(null);
-                                },
+            },
+            {
+                label: 'Delete Scene',
+                cb: async () => {
+                    modalStore.setModal({
+                        title: 'Delete Scene',
+                        description: 'Are you sure you want to delete this scene?',
+                        type: 'dialog',
+                        onConfirm: {
+                            label: 'Delete',
+                            cb: async () => {
+                                await excalidrawStore.deleteScene(uuid);
+                                modalStore.setModal(null);
                             },
-                            onCancel: {
-                                label: 'Cancel',
-                                cb: () => {
-                                    modalStore.setModal(null);
-                                },
+                        },
+                        onCancel: {
+                            label: 'Cancel',
+                            cb: () => {
+                                modalStore.setModal(null);
                             },
-                        } as DialogModal);
-                    },
+                        },
+                    } as ModalDialog);
                 },
-            ],
-        } as RightClickMenu);
-    };
+            },
+            {
+                label: 'Clear Scene',
+                cb: async () => {
+                    modalStore.setModal({
+                        title: 'Clear Scene',
+                        description: 'Are you sure you want to clear all content from this scene?',
+                        type: 'dialog',
+                        onConfirm: {
+                            label: 'Clear',
+                            cb: async () => {
+                                excalidrawStore.clearScene(uuid);
+                                modalStore.setModal(null);
+                            },
+                        },
+                        onCancel: {
+                            label: 'Cancel',
+                            cb: () => {
+                                modalStore.setModal(null);
+                            },
+                        },
+                    } as ModalDialog);
+                },
+            },
+        ],
+    } as RightClickMenu);
+};
 
-    const onSubmitNewScene = async (e: KeyboardEvent, name: string) => {
-        try {
-            const scene = await excalidrawStore.createNewScene(name);
-            await excalidrawStore.selectScene(scene);
-        } catch (error) {
-            console.error('Error creating new excalidraw scene:', error);
-        }
-    };
+const onSubmitNewScene = async (e: KeyboardEvent, name: string) => {
+    const scene = await excalidrawStore.createNewScene(name);
+    await excalidrawStore.selectScene(scene);
+};
 </script>
 
 <style scoped lang="scss">
-    @use '../../../styles/variables' as *;
+@use '@render/styles/variables' as *;
 
-    .scene-workspace-panel {
-        height: 100%;
-        padding: 1rem;
+.scene-workspace-panel {
+    height: 100%;
+    padding: 1rem;
 
-        &-scenes {
-            display: flex;
-            gap: 0.5rem;
-            align-items: center;
-            flex-wrap: wrap;
-            margin-bottom: 0.75rem;
+    &-scenes {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 0.75rem;
+        height: 2.5rem;
 
-            &-toggle {
-                font-size: 0.875rem;
-            }
+        &-toggle {
+            font-size: 0.875rem;
+        }
 
-            &-add {
-                font-size: 0.875rem;
-            }
+        &-add {
+            font-size: 0.875rem;
         }
     }
+}
 </style>

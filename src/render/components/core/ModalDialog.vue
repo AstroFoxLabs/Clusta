@@ -20,39 +20,39 @@
 </template>
 
 <script setup lang="ts">
-    import Modal from './Modal.vue';
-    import { useModalStore } from '@render/stores/modalStore';
+import { useModalStore } from '@render/stores/modalStore';
+import Modal from './Modal.vue';
 
-    // --- PROPS & EMITS ---
+// --- PROPS & EMITS ---
 
-    // --- STORES ---
+// --- STORES ---
 
-    const modalStore = useModalStore();
+const modalStore = useModalStore();
 
-    // --- STATES ---
+// --- STATES ---
 
-    // --- COMPUTED ---
+// --- COMPUTED ---
 
-    // --- WATCHERS ---
+// --- WATCHERS ---
 
-    // --- METHODS ---
+// --- METHODS ---
 
-    const onCancel = () => {
-        if (modalStore.modal && modalStore.modal.type === 'dialog') {
-            modalStore.modal.onCancel?.cb();
-        }
-    };
+const onCancel = () => {
+    if (modalStore.modal && modalStore.modal.type === 'dialog') {
+        modalStore.modal.onCancel?.cb();
+    }
+};
 </script>
 
 <style scoped lang="scss">
-    @use '../../styles/variables.scss' as *;
+@use '@render/styles/variables' as *;
 
-    .dialog-modal {
-        &-actions {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            margin-top: 1rem;
-        }
+.dialog-modal {
+    &-actions {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-top: 1rem;
     }
+}
 </style>

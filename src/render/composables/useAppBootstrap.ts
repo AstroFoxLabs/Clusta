@@ -1,10 +1,11 @@
+import { useCategoryStore } from '@render/stores/categoryStore';
 import { useExcalidrawStore } from '@render/stores/excalidrawStore';
+import { useImageStore } from '@render/stores/imageStore';
+import { useNotificationStore } from '@render/stores/notificationStore';
 import { useSettingsStore } from '@render/stores/settingsStore';
-import { getFileBufferFromPath } from '@render/utils/utils';
+import { useTagStore } from '@render/stores/tagStore';
+import { getFileBufferFromPath } from '@render/utils';
 import { ImageFilePayload } from '@shared/types';
-import { useCategoryStore } from '../stores/categoryStore';
-import { useImageStore } from '../stores/imageStore';
-import { useTagStore } from '../stores/tagStore';
 
 // Closure to make sure the stores are available before the application is fully loaded
 export const useAppBootstrap = async () => {
@@ -13,14 +14,15 @@ export const useAppBootstrap = async () => {
     const tagStore = useTagStore();
     const excalidrawStore = useExcalidrawStore();
     const settingsStore = useSettingsStore();
+    const notificationStore = useNotificationStore();
 
     const initializeApp = async (): Promise<void> => {
         try {
             await settingsStore.loadSettings();
-            imageStore.collection = await imageStore.fetchAll();
-            categoryStore.collection = await categoryStore.fetchAll();
-            tagStore.collection = await tagStore.fetchAll();
-            excalidrawStore.scenes = await excalidrawStore.fetchAllRecords();
+            await imageStore.fetchAll();
+            await categoryStore.fetchAll();
+            await tagStore.fetchAll();
+            await excalidrawStore.fetchAllRecords();
             await initializeDefaultData();
 
             if (excalidrawStore.scenes.length >= 0) {
@@ -37,6 +39,7 @@ export const useAppBootstrap = async () => {
             // console.log('Tag Collection:', tagStore.collection);
             // console.log('Excalidraw Records:', excalidrawStore.scenes);
         } catch (error) {
+            notificationStore.addEventMessage('Failed to initialize app. Check Logs or contact Developer.');
             console.error('Error during app initialization:', error);
             throw error;
         }
@@ -49,7 +52,7 @@ export const useAppBootstrap = async () => {
         let tID = '';
         try {
             if (imageStore.collection.length === 0) {
-                const buffer = await getFileBufferFromPath('src/render/assets/default.webp');
+                const buffer = await getFileBufferFromPath('src/render/public/assets/default.webp');
                 const payload: ImageFilePayload = {
                     name: 'cutefox',
                     size: buffer.length,
@@ -58,7 +61,7 @@ export const useAppBootstrap = async () => {
                     mimeType: 'image/webp',
                 };
 
-                await imageStore.createImage(payload.name, payload);
+                await imageStore.create(payload.name, payload);
             }
         } catch (error) {
             console.error('Failed to initialize default image:', error);
@@ -68,7 +71,7 @@ export const useAppBootstrap = async () => {
         // initialize default category
         try {
             if (categoryStore.collection.length === 0) {
-                cID = await categoryStore.create('Your Category');
+                await categoryStore.create('Your Category');
             }
         } catch (error) {
             console.error('Failed to initialize default category:', error);
@@ -78,7 +81,7 @@ export const useAppBootstrap = async () => {
         // initialize default tag
         try {
             if (tagStore.collection.length === 0) {
-                tID = await tagStore.create('Your Tag');
+                await tagStore.create('Your Tag');
             }
         } catch (error) {
             console.error('Failed to initialize default tag:', error);

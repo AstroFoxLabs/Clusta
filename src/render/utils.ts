@@ -109,13 +109,38 @@ export const uploadFileList = async (fileList: FileList): Promise<void> => {
                 data: new Uint8Array(await file.arrayBuffer()),
                 hash: await createBufferHash(new Uint8Array(await file.arrayBuffer())),
             };
-            try {
-                await imageStore.createImage(file.name, imageFile);
-            } catch (error) {
-                console.error('Error persisting selected image file:', error);
-            }
+            await imageStore.create(file.name, imageFile);
         } else {
             console.warn(`File ${file.name} has unsupported type ${file.type}. Skipping.`);
         }
     }
+};
+
+type Identifiable = { id?: string; uuid?: string };
+
+// Upsert elements usually in the store into their collection, single or multiple while
+// returning the reference to the upserted item(s)
+export const upsert = <T extends Identifiable>(items: T[], target: T[], key: keyof T = 'id'): T | T[] => {
+    if (items.length === 1) {
+        const item = items[0];
+        const index = target.findIndex((i) => i[key] == item[key]);
+        if (index === -1) {
+            target.push(item);
+            return item;
+        } else {
+            Object.assign(target[index], item);
+            return target[index];
+        }
+    }
+
+    items.forEach((item) => {
+        const index = target.findIndex((i) => i[key] == item[key]);
+        if (index === -1) {
+            target.push(item);
+        } else {
+            Object.assign(target[index], item);
+        }
+    });
+
+    return items;
 };

@@ -1,14 +1,16 @@
-import { ref } from 'vue';
-import { defineStore } from 'pinia';
-import { IpcResponse, CatalogTag, CatalogImage } from '@shared/types';
-import { useImageStore } from './imageStore';
-import { displayNameToTechnicalName } from '@render/utils/utils';
 import { ipcAPI } from '@render/services/ipcAPIService';
+import { displayNameToTechnicalName, upsert } from '@render/utils';
+import { CatalogTag } from '@shared/types';
+import { defineStore } from 'pinia';
+import { ref } from 'vue';
+import { useImageStore } from './imageStore';
+import { useNotificationStore } from './notificationStore';
 
 export const useTagStore = defineStore('tag', () => {
     /* ---------------------------- STORES ---------------------------- */
 
     const imageStore = useImageStore();
+    const notificationStore = useNotificationStore();
 
     /* ---------------------------- STATES ---------------------------- */
 
@@ -18,45 +20,28 @@ export const useTagStore = defineStore('tag', () => {
 
     /* ---------------------------- INTERNALS ------------------------- */
 
-    const upsert = (tags: CatalogTag[]): void => {
-        tags.forEach((tag) => {
-            const index = collection.value.findIndex((t) => t.id == tag.id);
-            if (index === -1) {
-                collection.value.push(tag);
-            } else {
-                Object.assign(collection.value[index], tag);
-            }
-        });
-    };
-
     /* ----------------------------- ACTIONS ------------------------- */
 
     const fetchAll = async (): Promise<CatalogTag[]> => {
         try {
-            return await ipcAPI<CatalogTag[]>(() => window.catalogTag.all());
+            const res = await ipcAPI<CatalogTag[]>(() => window.catalogTag.all());
+            return upsert([...res], collection.value) as CatalogTag[];
         } catch (error) {
-            console.error('Failed to fetch all tags:', error);
-            return [];
+            notificationStore.addEventMessage('Failed to fetch tags');
+            console.error('Error fetching tags:', error);
+            throw error;
         }
     };
 
-    const fetchById = async (id: string): Promise<CatalogTag | null> => {
-        try {
-            return await ipcAPI<CatalogTag>(() => window.catalogTag.get(id));
-        } catch (error) {
-            console.error(`Failed to fetch tag with id ${id}:`, error);
-            return null;
-        }
-    };
-
-    const create = async (name: string): Promise<string> => {
+    const create = async (name: string): Promise<CatalogTag> => {
         try {
             const technicalName = displayNameToTechnicalName(name);
-            const tag = await ipcAPI<CatalogTag>(() => window.catalogTag.create(technicalName));
-            upsert([tag]);
-            return tag.id;
+            const id = await ipcAPI<string>(() => window.catalogTag.create(technicalName));
+            const tag = await ipcAPI<CatalogTag>(() => window.catalogTag.get(id));
+            return upsert([tag], collection.value) as CatalogTag;
         } catch (error) {
-            console.error('Failed to create and save tag:', error);
+            notificationStore.addEventMessage('Failed to create tag');
+            console.error('Error creating tag:', error);
             throw error;
         }
     };
@@ -77,7 +62,8 @@ export const useTagStore = defineStore('tag', () => {
             await ipcAPI<void>(() => window.catalogTag.assignToImage(imageId, tagId));
             image.tags = [...(image.tags ?? []), tag];
         } catch (error) {
-            console.error(`Failed to assign tag ${tagId} to image ${imageId}:`, error);
+            notificationStore.addEventMessage('Failed to assign tag to image');
+            console.error('Error assigning tag to image:', error);
             throw error;
         }
     };
@@ -86,11 +72,13 @@ export const useTagStore = defineStore('tag', () => {
         try {
             await ipcAPI<void>(() => window.catalogTag.unassignFromImage(imageId, tagId));
             const image = imageStore.collection.find((img) => img.id === imageId);
-            if (image) {
-                image.tags = image.tags?.filter((t) => t.id !== tagId) ?? [];
+            if (!image) {
+                throw new Error(`Image with id ${imageId} not found`);
             }
+            image.tags = image.tags?.filter((t) => t.id !== tagId) ?? [];
         } catch (error) {
-            console.error(`Failed to remove tag ${tagId} from image ${imageId}:`, error);
+            notificationStore.addEventMessage('Failed to unassign tag from image');
+            console.error('Error unassigning tag from image:', error);
             throw error;
         }
     };
@@ -100,7 +88,8 @@ export const useTagStore = defineStore('tag', () => {
             await ipcAPI<void>(() => window.catalogTag.delete(tagId));
             collection.value = collection.value.filter((t) => t.id !== tagId);
         } catch (error) {
-            console.error(`Failed to delete tag with id ${tagId}:`, error);
+            notificationStore.addEventMessage('Failed to delete tag');
+            console.error('Error deleting tag:', error);
             throw error;
         }
     };
@@ -109,7 +98,6 @@ export const useTagStore = defineStore('tag', () => {
         collection,
         upsert,
         fetchAll,
-        fetchById,
         create,
         unassignFromImage,
         assignToImage,

@@ -1,6 +1,6 @@
-import { defineStore } from 'pinia';
-import { Component, DefineComponent, ref } from 'vue';
 import { ipcAPI } from '@render/services/ipcAPIService';
+import { defineStore } from 'pinia';
+import { ref } from 'vue';
 
 export enum DragAndDropSource {
     EXTERNAL,
@@ -19,7 +19,7 @@ export interface RightClickMenuCallback {
     cb: () => void;
 }
 
-// dataTransfer type to identify internal drag-and-drop operations
+// Identify internal drag-and-drop operations
 export const INTERNAL_DATA_TRANSFER_TYPE = 'application/x-clusta-internal-dragndrop';
 
 export const useAppStore = defineStore('app', () => {
@@ -27,7 +27,7 @@ export const useAppStore = defineStore('app', () => {
     /* ---------------------------- STATES ---------------------------- */
 
     // false => drag-and-drop operation from outside the app is happening
-    // this means this needs to be toggled to true when dragging a grid item inside the app
+    // Toggle to true when dragging a grid item inside the app
     const imageDefaultPath = ref<string>('');
     const imageDefaultExtension = ref<string>('');
     const fileDefaultPath = ref<string>('');
@@ -44,20 +44,15 @@ export const useAppStore = defineStore('app', () => {
     /* ----------------------------- ACTIONS ------------------------- */
 
     const setAlwaysOnTop = async (alwaysOnTop: boolean): Promise<void> => {
-        try {
-            await ipcAPI<void>(() => window.appWindow.setAlwaysOnTop(alwaysOnTop));
-        } catch (error) {
-            console.error('Error setting always on top:', error);
-            throw error;
-        }
+        await ipcAPI<void>(() => window.appWindow.setAlwaysOnTop(alwaysOnTop));
     };
 
     return {
-        rightClickMenu,
         setRightClickMenu,
+        setAlwaysOnTop,
+        rightClickMenu,
         imageDefaultPath,
         imageDefaultExtension,
         fileDefaultPath,
-        setAlwaysOnTop,
     };
 });

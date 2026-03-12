@@ -1,10 +1,10 @@
+import DatabaseService from '@main/services/DatabaseService.js';
 import type { CatalogTag } from '@shared/types.js';
-import DatabaseService from '../services/DatabaseService.js';
 import { register } from './ipcHandlers.js';
 
 register<{}, CatalogTag[]>('get-tags-all', async () => {
     const sql = 'SELECT * FROM tags ORDER BY id DESC';
-    return (await DatabaseService.getInstance().all(sql, {})) as CatalogTag[];
+    return (await DatabaseService.getInstance().all(sql)) as CatalogTag[];
 });
 
 register<{ id: string }, CatalogTag | null>('get-tag', async (event, { id }) => {
@@ -16,12 +16,11 @@ register<{ id: string }, CatalogTag | null>('get-tag', async (event, { id }) => 
     return row;
 });
 
-register<{ technicalName: string }, CatalogTag>('create-tag', async (event, { technicalName }) => {
+register<{ technicalName: string }, string>('create-tag', async (event, { technicalName }) => {
     const sql = 'INSERT INTO tags (technical_name) VALUES (?)';
-    await DatabaseService.getInstance().run(sql, [technicalName]);
-
-    const recordSql = 'SELECT * FROM tags WHERE technical_name = ? LIMIT 1';
-    return (await DatabaseService.getInstance().get(recordSql, [technicalName])) as CatalogTag;
+    const lastID = await DatabaseService.getInstance().run(sql, [technicalName]);
+    if (lastID) return lastID.toString() as string;
+    else throw new Error('Failed to create tag record');
 });
 
 register<{ imageId: string; tagId: string }, void>('assign-tag-to-image', async (event, { imageId, tagId }) => {

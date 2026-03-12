@@ -13,13 +13,15 @@ export interface Modal {
     description?: string;
 }
 
-export interface DialogModal extends Modal {
+type ModalInstance = ModalDialog | ModalInput | ModalCustom;
+
+export interface ModalDialog extends Modal {
     type: 'dialog';
     onConfirm: ModalActionCb<unknown, unknown>;
     onCancel?: ModalActionCb<unknown, unknown>;
 }
 
-export interface InputModal extends Modal {
+export interface ModalInput extends Modal {
     type: 'input';
     inputLabel: string;
     inputPlaceholder?: string;
@@ -28,7 +30,7 @@ export interface InputModal extends Modal {
     initialValue?: string;
 }
 
-export interface CustomModal extends Modal {
+export interface ModalCustom extends Modal {
     type: 'custom';
     cb: ModalActionCb<unknown, unknown>[];
     props?: Record<string, any>;
@@ -39,13 +41,13 @@ export const useModalStore = defineStore('modal', () => {
 
     /* ---------------------------- STATES ---------------------------- */
 
-    const modal = ref<CustomModal | DialogModal | InputModal | null>(null);
+    const modal = ref<ModalInstance | null>(null);
 
     /* ----------------------------- GETTERS ------------------------- */
 
     /* ---------------------------- INTERNALS ------------------------- */
 
-    const setModal = (modalData: CustomModal | DialogModal | InputModal | null): void => {
+    const setModal = (modalData: ModalInstance | null): void => {
         modal.value = modalData;
     };
 

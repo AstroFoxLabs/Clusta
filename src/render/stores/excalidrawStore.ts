@@ -1,11 +1,10 @@
+import { serializeAsJSON } from '@excalidraw/excalidraw';
 import { ExcalidrawElement } from '@excalidraw/excalidraw/element/types';
-import { ActiveTool, AppState, BinaryFiles, ExcalidrawInitialDataState, ToolType } from '@excalidraw/excalidraw/types';
-import { ImportedDataState } from '@excalidraw/excalidraw/data/types';
+import { ActiveTool, AppState, BinaryFiles, ToolType } from '@excalidraw/excalidraw/types';
 import { ipcAPI } from '@render/services/ipcAPIService';
-import { ExcalidrawScene, ExcalidrawSceneData, ExcalidrawSceneRecord } from '@shared/types';
+import { ExcalidrawScene, ExcalidrawSceneData, ExcalidrawSceneRecord, UUID } from '@shared/types';
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
-import { serializeAsJSON } from '@excalidraw/excalidraw';
 
 /**
  * We intentionally separate scene "records" from scene "data".
@@ -17,12 +16,16 @@ import { serializeAsJSON } from '@excalidraw/excalidraw';
  * avoiding loading all scene content into memory at startup.
  */
 
+import { upsert } from '@render/utils';
+import { useNotificationStore } from './notificationStore';
 import { useSettingsStore } from './settingsStore';
 
 export const useExcalidrawStore = defineStore('excalidraw', () => {
     /* ---------------------------- STORES ---------------------------- */
 
     const settingsStore = useSettingsStore();
+    const notificationStore = useNotificationStore();
+
     /* ---------------------------- STATES ---------------------------- */
 
     const scenes = ref<ExcalidrawScene[]>([]);
@@ -59,30 +62,16 @@ export const useExcalidrawStore = defineStore('excalidraw', () => {
 
     /* ---------------------------- INTERNALS ------------------------- */
 
-    const upsert = (newScenes: ExcalidrawScene[]): void => {
-        newScenes.forEach((nScene) => {
-            const index = scenes.value.findIndex((s) => s.uuid === nScene.uuid);
-            if (index === -1) {
-                scenes.value.push(nScene);
-            } else {
-                Object.assign(scenes.value[index], nScene);
-            }
-        });
-    };
-
     /* ----------------------------- ACTIONS ------------------------- */
 
-    const updateName = async (uuid: string, name: string): Promise<string> => {
+    const updateRecord = async (record: ExcalidrawSceneRecord): Promise<ExcalidrawSceneRecord> => {
         try {
-            const record = scenes.value.find((r) => r.uuid === uuid);
-            if (!record) {
-                throw new Error(`Scene record with uuid ${uuid} not found in store collection`);
-            }
-            await ipcAPI<void>(() => window.excalidraw.updateRecordName(uuid, name));
-            Object.assign(record, { name });
-            return record.name;
+            await ipcAPI<ExcalidrawSceneRecord>(() => window.excalidraw.update(JSON.parse(JSON.stringify(record))));
+            const updatedRecord = await ipcAPI<ExcalidrawSceneRecord>(() => window.excalidraw.getRecord(record.uuid));
+            return upsert([updatedRecord], scenes.value, 'uuid') as ExcalidrawSceneRecord;
         } catch (error) {
-            console.error(`Failed to update name for excalidraw record with uuid ${uuid}:`, error);
+            notificationStore.addEventMessage('Failed to update excalidraw record');
+            console.error('Error updating excalidraw record:', error);
             throw error;
         }
     };
@@ -91,87 +80,67 @@ export const useExcalidrawStore = defineStore('excalidraw', () => {
         try {
             await ipcAPI<void>(() => window.excalidraw.deleteRecord(uuid));
             scenes.value = scenes.value.filter((r) => r.uuid !== uuid);
-        } catch (error) {
-            console.error(`Failed to delete excalidraw record with uuid ${uuid}:`, error);
-            throw error;
-        }
-
-        try {
             await ipcAPI<void>(() => window.excalidraw.deleteSceneData(uuid));
         } catch (error) {
-            console.error(
-                `Failed to delete excalidraw scene data with uuid ${uuid}. Will be cleaned up on startup:`,
-                error,
-            );
+            notificationStore.addEventMessage('Failed to delete excalidraw record');
+            console.error('Error deleting excalidraw record:', error);
+            throw error;
         }
     };
 
     const fetchAllRecords = async (): Promise<ExcalidrawSceneRecord[]> => {
         try {
             const records = await ipcAPI<ExcalidrawSceneRecord[]>(() => window.excalidraw.allRecords());
-
-            if (!records || records.length === 0) {
+            if (records.length === 0) {
                 console.warn('No excalidraw records found when fetching all records');
+                return scenes.value;
             }
-
-            upsert([...records]);
-            return records;
+            return upsert([...records], scenes.value, 'uuid') as ExcalidrawSceneRecord[];
         } catch (error) {
-            console.error('Failed to fetch all excalidraw records:', error);
+            notificationStore.addEventMessage('Failed to fetch excalidraw records');
+            console.error('Error fetching excalidraw records:', error);
             throw error;
         }
     };
 
-    const fetchRecordByUUID = async (uuid: string): Promise<ExcalidrawSceneRecord | null> => {
+    const fetchSceneData = async (uuid: UUID): Promise<ExcalidrawScene> => {
         try {
-            const record = await ipcAPI<ExcalidrawSceneRecord>(() => window.excalidraw.getRecord(uuid));
-
-            if (!record) {
-                console.warn(`No excalidraw record found with uuid ${uuid}`);
-                return null;
-            }
-
-            upsert([record]);
-            return record;
+            const data = await ipcAPI<ExcalidrawSceneData>(() => window.excalidraw.getSceneData(uuid));
+            return {
+                uuid,
+                name: scenes.value.find((s) => s.uuid === uuid)?.name ?? 'Unknown Scene',
+                ...data,
+            } as ExcalidrawScene;
         } catch (error) {
-            console.error(`Failed to fetch excalidraw record with uuid ${uuid}:`, error);
-            return null;
-        }
-    };
-
-    const fetchSceneData = async (uuid: string): Promise<ExcalidrawSceneData> => {
-        try {
-            return await ipcAPI<ExcalidrawSceneData>(() => window.excalidraw.getSceneData(uuid));
-        } catch (error) {
-            console.error(`Failed to load scene data for record ${uuid}:`, error);
+            notificationStore.addEventMessage('Failed to fetch excalidraw scene data');
+            console.error(`Error fetching excalidraw scene data for record ${uuid}:`, error);
             throw error;
         }
     };
 
-    const persistSceneData = async (scene: ExcalidrawSceneData, uuid: string): Promise<ExcalidrawSceneData> => {
+    const persistSceneData = async (scene: ExcalidrawSceneData, uuid: UUID): Promise<ExcalidrawSceneData> => {
+        if (!scene.elements || !scene.appState || !scene.files) {
+            throw new Error(
+                `Scene data for record with uuid ${uuid} is missing elements or appState or files when persisting scene data`,
+            );
+        }
+        let sceneData: ExcalidrawSceneData;
         try {
-            if (!scene.elements || !scene.appState || !scene.files) {
-                throw new Error(
-                    `Scene data for record with uuid ${uuid} is missing elements or appState or files when persisting scene data`,
-                );
-            }
-
-            // Striping away non-serializable properties and ensuring all required properties are present for serialization
+            // Striping away non-serializable properties
             const strippedScene = JSON.parse(serializeAsJSON(scene.elements, scene.appState, scene.files, 'local'));
-
-            const sceneData: ExcalidrawSceneData = {
+            sceneData = {
                 elements: strippedScene.elements,
                 appState: strippedScene.appState,
                 files: strippedScene.files,
             };
             return await ipcAPI<ExcalidrawSceneData>(() => window.excalidraw.persistSceneData(sceneData, uuid));
         } catch (error) {
-            console.error('Failed to store excalidraw scene:', error);
+            notificationStore.addEventMessage('Failed to persist excalidraw scene data');
+            console.error(`Error persisting excalidraw scene data for record ${uuid}:`, error);
             throw error;
         }
     };
 
-    // Checks periodically if scene data has been mutated and persists it if so.
     const startPersistSceneDataLoop = (): void => {
         if (persistIntervalID.value) {
             clearInterval(persistIntervalID.value);
@@ -184,60 +153,73 @@ export const useExcalidrawStore = defineStore('excalidraw', () => {
                         scene.mutated = false;
                     }
                 } catch (error) {
+                    notificationStore.addEventMessage(`Excalidraw persist failed: ${scene.name}`);
                     console.error(`Failed to persist scene data for record ${scene.uuid}:`, error);
                 }
             }
         }, persistIntervalMs.value);
     };
 
-    // Loads scene data when selecting a scene if not already loaded and sets selectedScene
     const selectScene = async (scene: ExcalidrawScene | null): Promise<void> => {
         if (!scene) {
             selectedScene.value = null;
             return;
         }
 
-        // Possible scene has no data yet, so we fetch it (Lazy Loading)
+        if (scene === selectedScene.value) return;
+
+        // No Data => fetch it (Lazy Loading)
         if (!scene.appState || !scene.elements || !scene.files) {
+            console.warn(`${scene.uuid} is missing appstate / elements / files... Fetching data.`);
             try {
-                console.warn(
-                    `Scene with uuid ${scene?.uuid} is missing appState or elements or files
-                    when selecting scene. Loading scene data...`,
-                );
-                const data = await fetchSceneData(scene.uuid);
-                Object.assign(scene, data);
+                Object.assign(scene, await fetchSceneData(scene.uuid));
             } catch (error) {
-                console.error(`Failed to load scene data for record ${scene?.uuid} when selecting scene:`, error);
+                notificationStore.addEventMessage('Failed to load excalidraw scene data');
+                console.error(`Failed to load scene data for record ${scene.uuid}. Setting null now`, error);
                 scene = null;
             }
         }
         selectedScene.value = scene;
     };
 
+    // Skips SceneData creation, happens at scene selection
     const createNewScene = async (name: string): Promise<ExcalidrawScene> => {
-        const createRecord = async (name: string): Promise<string> => {
-            try {
-                const record = await ipcAPI<ExcalidrawSceneRecord>(() =>
-                    window.excalidraw.createRecord(crypto.randomUUID(), name),
-                );
-                upsert([record]);
-                return record.uuid;
-            } catch (error) {
-                console.error('Failed to create excalidraw record:', error);
-                throw error;
-            }
-        };
-
         try {
-            const uuid = await createRecord(name);
-            const record = scenes.value.find((r) => r.uuid === uuid);
-            if (!record) throw Error('Record could not be created.');
-            await persistSceneData(sceneInitialData, record.uuid);
-            return record;
+            const createRecord = async (name: string): Promise<ExcalidrawScene> => {
+                const uuid = await ipcAPI<string>(() => window.excalidraw.createRecord(crypto.randomUUID(), name));
+                const record = await ipcAPI<ExcalidrawSceneRecord>(() => window.excalidraw.getRecord(uuid));
+
+                return {
+                    uuid: record.uuid,
+                    name: record.name,
+                    ...sceneInitialData,
+                } as ExcalidrawScene;
+            };
+            const resScene = await createRecord(name);
+            return upsert([resScene], scenes.value, 'uuid') as ExcalidrawScene;
         } catch (error) {
-            console.error('Failed to create a new Excalidraw Scene:', error);
+            notificationStore.addEventMessage('Failed to create new excalidraw scene');
+            console.error('Error creating new excalidraw scene:', error);
             throw error;
         }
+    };
+
+    const clearScene = async (uuid: UUID): Promise<void> => {
+        let scene = scenes.value.find((s) => s.uuid === uuid);
+        if (!scene) {
+            console.error(`Scene with uuid ${uuid} not found when trying to clear scene`);
+            return;
+        }
+        // Workaround to clear the cache of the component, otherwise clearing the selected scene does not work.
+        if (selectedScene.value?.uuid === uuid) {
+            await selectScene(null);
+        }
+
+        scene.elements = [];
+        scene.files = {};
+        scene.appState = { ...sceneInitialData.appState };
+        scene.mutated = true; // Mark as mutated so that it gets persisted in the next persist loop iteration
+        await selectScene(scene);
     };
 
     return {
@@ -246,13 +228,13 @@ export const useExcalidrawStore = defineStore('excalidraw', () => {
         selectedScene,
         selectScene,
         fetchAllRecords,
-        fetchRecordByUUID,
-        deleteSceneByUUID: deleteScene,
-        updateName,
+        deleteScene,
         fetchSceneData,
         upsert,
+        updateRecord,
         persistSceneData,
         startPersistSceneDataLoop,
         createNewScene,
+        clearScene,
     };
 });
