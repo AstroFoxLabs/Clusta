@@ -1,6 +1,6 @@
 {
     "name": "clusta",
-    "version": "v1.0.0",
+    "version": "v1.0.1",
     "license": "GPLv3",
     "type": "commonjs",
     "main": "dist/main/main.js",
