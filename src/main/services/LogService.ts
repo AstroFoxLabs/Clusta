@@ -48,41 +48,41 @@ export default class LogService {
 
             case 'info':
                 if (errorValue !== undefined && errorValue !== null) {
-                    Logger.info(logMessage, errorValue);
-                    console.info(logMessage, errorValue);
+                    Logger.info(`INFO: ${logMessage}`, errorValue);
+                    console.info(`INFO: ${logMessage}`, errorValue);
                 } else {
-                    Logger.info(logMessage);
-                    console.info(logMessage);
+                    Logger.info(`INFO: ${logMessage}`);
+                    console.info(`INFO: ${logMessage}`);
                 }
                 break;
 
             case 'warn':
                 if (errorValue !== undefined && errorValue !== null) {
-                    Logger.warn(logMessage, errorValue);
-                    console.warn(logMessage, errorValue);
+                    Logger.warn(`WARN: ${logMessage}`, errorValue);
+                    console.warn(`WARN: ${logMessage}`, errorValue);
                 } else {
-                    Logger.warn(logMessage);
-                    console.warn(logMessage);
+                    Logger.warn(`WARN: ${logMessage}`);
+                    console.warn(`WARN: ${logMessage}`);
                 }
                 break;
 
             case 'critical':
                 if (errorValue !== undefined && errorValue !== null) {
-                    Logger.error(`CRITICAL:---- ${logMessage}`, errorValue);
-                    console.error(`CRITICAL:---- ${logMessage}`, errorValue);
+                    Logger.error(`CRITICAL: ${logMessage}`, errorValue);
+                    console.error(`CRITICAL: ${logMessage}`, errorValue);
                 } else {
-                    Logger.error(`CRITICAL:---- ${logMessage}`);
-                    console.error(`CRITICAL:---- ${logMessage}`);
+                    Logger.error(`CRITICAL: ${logMessage}`);
+                    console.error(`CRITICAL: ${logMessage}`);
                 }
                 break;
 
             default:
                 if (errorValue !== undefined && errorValue !== null) {
-                    Logger.info(logMessage, errorValue);
-                    console.log(logMessage, errorValue);
+                    Logger.info(`DEFAULT: ${logMessage}`, errorValue);
+                    console.log(`DEFAULT: ${logMessage}`, errorValue);
                 } else {
-                    Logger.info(logMessage);
-                    console.log(logMessage);
+                    Logger.info(`DEFAULT: ${logMessage}`);
+                    console.log(`DEFAULT: ${logMessage}`);
                 }
         }
     }
