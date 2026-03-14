@@ -1,6 +1,6 @@
 {
     "name": "clusta",
-    "version": "v1.0.5",
+    "version": "v1.0.6",
     "license": "GPLv3",
     "author": {
         "name": "AstroFoxLabs (Vinzenz Wetzel)",
@@ -10,8 +10,8 @@
     "type": "commonjs",
     "main": "dist/main/main.js",
     "scripts": {
-        "dev": "cross-env VITE_APP_ENV=development npm run esbuild-main && npm run esbuild-preload && concurrently \"vite --config ./vite.config.render.ts\" \"electron .\"",
-        "build": "cross-env VITE_APP_ENV=production npm run esbuild-main && npm run esbuild-preload && vite build --config ./vite.config.render.ts",
+        "dev": "npm run esbuild-main && npm run esbuild-preload && concurrently \"vite --config ./vite.config.render.ts\" \"electron .\"",
+        "build": "npm run esbuild-main && npm run esbuild-preload && vite build --config ./vite.config.render.ts",
         "ts": "tsc -p src/tsconfig.json && tsc-alias -p src/tsconfig.json && tsc -p src/preload/tsconfig.json",
         "test": "npx vitest --config src/tests/vitest.config.ts",
         "pretty": "prettier --write \"./**/*.{js,jsx,mjs,cjs,ts,tsx,json}\"",
@@ -28,10 +28,15 @@
         },
         "extraResources": [
             {
-                "from": "assets",
-                "to": "assets"
+                "from": "assets/defaults",
+                "to": "defaults"
             }
         ],
+        "files": [
+            "dist/**/*",
+            "package.json"
+        ],
+        "asar": true,
         "mac": {
             "target": "dmg"
         },
@@ -70,7 +75,6 @@
         "@types/react-dom": "^19.2.3",
         "@vitejs/plugin-vue": "^6.0.3",
         "concurrently": "^9.2.1",
-        "cross-env": "^10.1.0",
         "dotenv": "^17.2.3",
         "dotenv-cli": "^11.0.0",
         "electron": "^39.2.2",
