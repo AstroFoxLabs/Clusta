@@ -14,13 +14,11 @@ import path from 'path';
 const { app, BrowserWindow } = electron;
 
 export let mainWindow: electron.BrowserWindow | null = null;
-export const isProd = process.env.VITE_APP_ENV === 'production';
 
 dotenv.config();
 Logger.initialize();
 
 LogService.clearLogFile();
-LogService.info(`Application starting in ${isProd ? 'production' : 'development'} mode...`);
 
 const windowSettingsDev: Electron.BrowserWindowConstructorOptions = {
     width: 1600,
@@ -49,21 +47,11 @@ const windowSettingsProd: Electron.BrowserWindowConstructorOptions = {
 };
 
 const createWindow = async () => {
-    mainWindow = new BrowserWindow(isProd ? windowSettingsProd : windowSettingsDev);
-    if (!isProd) {
-        mainWindow.webContents.openDevTools({ mode: 'detach' });
-        // Development can be built or run with Vite server
-        if (process.env.VITE_DEV_SERVER_URL) {
-            LogService.info('Loading from Vite dev server:', process.env.VITE_DEV_SERVER_URL);
-            await mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
-        } else throw new Error('VITE_DEV_SERVER_URL is not defined. Please set it to the URL of your Vite dev server.');
+    mainWindow = new BrowserWindow(app.isPackaged ? windowSettingsProd : windowSettingsDev);
+    if (!app.isPackaged && process.env.VITE_DEV_SERVER_URL) {
+        await mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
     } else {
-        try {
-            await mainWindow.loadFile(path.join(__dirname, '../render', 'index.html'));
-        } catch (err) {
-            LogService.error('Failed to load index.html in production:', err);
-            throw err;
-        }
+        await mainWindow.loadFile(path.join(__dirname, '../render/index.html'));
     }
 };
 
@@ -75,12 +63,12 @@ const initFilesystem = async () => {
     const settings = SettingsService.getInstance().getSettings();
     if (!FileStorageService.pathExists(settings.paths.images)) {
         LogService.warn(`Directory ${settings.paths.images} does not exist. Creating it now.`);
-        FileStorageService.copyDir(`${settings.paths.app}` + '/assets/default/images', settings.paths.images);
+        FileStorageService.copyDir(path.join(process.resourcesPath, 'defaults/images'), settings.paths.images);
     }
 
     if (!FileStorageService.pathExists(settings.paths.excalidraw)) {
         LogService.warn(`Directory ${settings.paths.excalidraw} does not exist. Creating it now.`);
-        FileStorageService.copyDir(`${settings.paths.app}` + '/assets/default/excalidraw', settings.paths.excalidraw);
+        FileStorageService.copyDir(path.join(process.resourcesPath, 'defaults/excalidraw'), settings.paths.excalidraw);
     }
 };
 
