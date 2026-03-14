@@ -14,7 +14,7 @@ import path from 'path';
 const { app, BrowserWindow } = electron;
 
 export let mainWindow: electron.BrowserWindow | null = null;
-export const isProd = true; // True if the app is packaged
+export const isProd = process.env.VITE_APP_ENV === 'production';
 
 dotenv.config();
 Logger.initialize();
@@ -56,12 +56,14 @@ const createWindow = async () => {
         if (process.env.VITE_DEV_SERVER_URL) {
             LogService.info('Loading from Vite dev server:', process.env.VITE_DEV_SERVER_URL);
             await mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
-        } else {
-            LogService.info('Loading from local file in development mode');
-            await mainWindow.loadFile(path.join(__dirname, '../render', 'index.html'));
-        }
+        } else throw new Error('VITE_DEV_SERVER_URL is not defined. Please set it to the URL of your Vite dev server.');
     } else {
-        await mainWindow.loadFile(path.join(__dirname, '../render', 'index.html'));
+        try {
+            await mainWindow.loadFile(path.join(__dirname, '../render', 'index.html'));
+        } catch (err) {
+            LogService.error('Failed to load index.html in production:', err);
+            throw err;
+        }
     }
 };
 
@@ -73,12 +75,12 @@ const initFilesystem = async () => {
     const settings = SettingsService.getInstance().getSettings();
     if (!FileStorageService.pathExists(settings.paths.images)) {
         LogService.warn(`Directory ${settings.paths.images} does not exist. Creating it now.`);
-        FileStorageService.createDir('images');
+        FileStorageService.copyDir(`${settings.paths.app}` + '/assets/default/images', settings.paths.images);
     }
 
     if (!FileStorageService.pathExists(settings.paths.excalidraw)) {
         LogService.warn(`Directory ${settings.paths.excalidraw} does not exist. Creating it now.`);
-        FileStorageService.createDir('excalidraw');
+        FileStorageService.copyDir(`${settings.paths.app}` + '/assets/default/excalidraw', settings.paths.excalidraw);
     }
 };
 
@@ -88,18 +90,35 @@ const initMigrations = async () => {
     await migrationService.runMigrations();
 };
 
+const initCleanUp = async () => {
+    await CleanUpService.removeOrphaned(
+        'images',
+        'id',
+        `${SettingsService.getInstance().getSettings().paths.images}`,
+        'webp',
+        'hash',
+    );
+    await CleanUpService.removeOrphaned(
+        'excalidraw_scenes',
+        'uuid',
+        `${SettingsService.getInstance().getSettings().paths.excalidraw}`,
+        'excalidraw',
+        'uuid',
+    );
+};
+
 app.on('ready', async () => {
     const updateService = new UpdateService();
     try {
         try {
             await updateService.checkForUpdates();
         } catch (err) {
-            LogService.error('Failed to check for updates. Skipping:', err);
+            LogService.error('Failed to check for updates. Skipping.', err);
         }
         await initDatabase();
         await initFilesystem();
         await initMigrations();
-        await CleanUpService.all();
+        await initCleanUp();
         await createWindow();
     } catch (err) {
         LogService.error('Failed to initialize application:', err);
