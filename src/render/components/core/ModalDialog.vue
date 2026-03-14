@@ -1,5 +1,5 @@
 <template lang="html">
-    <Modal class="dialog-modal" v-if="modalStore.modal && modalStore.modal.type === 'dialog'">
+    <Modal v-if="modalStore.modal && modalStore.modal.type === 'dialog'">
         <template v-if="modalStore.modal.title" #title>
             <span class="dialog-modal-title">{{ modalStore.modal.title }}</span>
         </template>

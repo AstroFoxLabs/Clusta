@@ -16,8 +16,8 @@
             </div>
         </div>
         <RightClickMenu />
-        <ModalInput v-if="modalStore.modal" />
-        <ModalDialog v-if="modalStore.modal" />
+        <ModalInput />
+        <ModalDialog />
     </div>
 </template>
 

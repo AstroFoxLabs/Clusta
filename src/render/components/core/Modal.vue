@@ -1,5 +1,5 @@
 <template lang="html">
-    <teleport to="body" v-if="modalStore.modal">
+    <teleport to="body">
         <div class="modal">
             <div class="modal-content">
                 <div class="modal-content-title">
