@@ -1,11 +1,19 @@
 import electron from 'electron';
 import { autoUpdater, type AppUpdater } from 'electron-updater';
+import path from 'path';
 import LogService from './LogService.js';
 
-const { dialog } = electron;
+const { dialog, app } = electron;
 
 export function getAutoUpdater(): AppUpdater {
     return autoUpdater;
+}
+
+function isPortable() {
+    // If the app is running inside 'AppData\Local' or 'Program Files' it's installed
+    const exePath = app.getPath('exe');
+    const exeDir = path.dirname(exePath).toLowerCase();
+    return !(exeDir.includes('program files') || exeDir.includes('appdata'));
 }
 
 export default class UpdateService {
@@ -25,11 +33,25 @@ export default class UpdateService {
 
         autoUpdater.on('update-available', (info) => {
             LogService.info('Update available:', info.version);
-            dialog.showMessageBox({
-                type: 'info',
-                title: 'Update Available',
-                message: `Version ${info.version} is available. Downloading now...`,
-            } as Electron.MessageBoxOptions);
+
+            if (!isPortable()) {
+                const choice = dialog.showMessageBoxSync({
+                    type: 'question',
+                    buttons: ['Yes', 'No'],
+                    title: 'Update Ready',
+                    message: `Version ${info.version} is available. Update now?`,
+                } as Electron.MessageBoxOptions);
+
+                if (choice === 0) {
+                    dialog.showMessageBox({
+                        type: 'info',
+                        title: 'Update Available',
+                        message: `Version ${info.version} is available. Downloading now...`,
+                    } as Electron.MessageBoxOptions);
+                }
+            } else {
+                LogService.info('Running in portable mode - skipping update prompt and download.');
+            }
         });
 
         autoUpdater.on('update-not-available', (info) => {
