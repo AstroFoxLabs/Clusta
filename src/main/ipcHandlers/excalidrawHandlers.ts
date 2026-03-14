@@ -1,5 +1,6 @@
 import DatabaseService from '@main/services/DatabaseService.js';
 import FileStorageService from '@main/services/FileStorageService.js';
+import SettingsService from '@main/services/SettingsService.js';
 import type { ExcalidrawSceneData, ExcalidrawSceneRecord, UUID } from '@shared/types.js';
 import { register } from './ipcHandlers.js';
 
@@ -13,7 +14,9 @@ register<{}, ExcalidrawSceneRecord[]>('get-scene-records-all', async () => {
 });
 
 register<{ uuid: string }, ExcalidrawSceneData>('get-scene-data', async (event, { uuid }) => {
-    return (await FileStorageService.getFileAsJSON('excalidraw', `${uuid}.excalidraw`)) as ExcalidrawSceneData;
+    return FileStorageService.getFileAsJSON(
+        `${SettingsService.getInstance().getSettings().paths.excalidraw}/${uuid}.excalidraw`,
+    ) as ExcalidrawSceneData;
 });
 
 register<{ uuid: string }, ExcalidrawSceneRecord | null>('get-scene-record', async (event, { uuid }) => {
@@ -28,7 +31,7 @@ register<{ uuid: string }, ExcalidrawSceneRecord | null>('get-scene-record', asy
 });
 
 register<{ uuid: string }, void>('delete-scene-data', async (event, { uuid }) => {
-    FileStorageService.delete(`${uuid}.excalidraw`, 'excalidraw');
+    FileStorageService.delete(`${SettingsService.getInstance().getSettings().paths.excalidraw}/${uuid}.excalidraw`);
 });
 
 register<{ uuid: string; name: string }, UUID>('create-scene-record', async (event, { uuid, name }) => {
@@ -45,7 +48,7 @@ register<{ sceneData: ExcalidrawSceneData; uuid: string }, void>(
         }
         const fileName = `${uuid}.excalidraw`;
         const buffer = Buffer.from(JSON.stringify(sceneData), 'utf-8');
-        FileStorageService.store(fileName, buffer, 'excalidraw');
+        FileStorageService.store(buffer, `${SettingsService.getInstance().getSettings().paths.excalidraw}/${fileName}`);
     },
 );
 

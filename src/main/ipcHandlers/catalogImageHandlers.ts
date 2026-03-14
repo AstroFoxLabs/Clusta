@@ -1,9 +1,9 @@
-import { CatalogImage, ImageFilePayload } from '@shared/types.js';
 import DatabaseService from '@main/services/DatabaseService.js';
 import FileStorageService from '@main/services/FileStorageService.js';
 import ImageConversionService from '@main/services/ImageConversionService.js';
 import SettingsService from '@main/services/SettingsService.js';
 import ValidationService from '@main/services/ValidationService.js';
+import { CatalogImage, ImageFilePayload } from '@shared/types.js';
 import { register } from './ipcHandlers.js';
 
 register<{}, CatalogImage[]>('get-catalog-images-all', async () => {
@@ -158,11 +158,10 @@ register<{ payload: ImageFilePayload }, ImageFilePayload>('persist-image-file', 
         throw new Error('Failed to convert image to webp format');
     }
 
-    FileStorageService.store(
-        `${payload.hash}.${SettingsService.getInstance().getSettings().image.conversion.format}`,
-        webpBuffer,
-        'images',
-    );
+    const format = SettingsService.getInstance().getSettings().image.conversion.format;
+    const filePath = `${SettingsService.getInstance().getSettings().paths.images}/${payload.hash}.${format}`;
+
+    FileStorageService.store(webpBuffer, filePath);
     return payload;
 });
 
@@ -185,7 +184,6 @@ register<{ id: string; onlyRecord: boolean }, void>('delete-image', async (event
     if (onlyRecord) return;
 
     FileStorageService.delete(
-        `${image.hash}.${SettingsService.getInstance().getSettings().image.conversion.format}`,
-        'images',
+        `${SettingsService.getInstance().getSettings().paths.images}/${image.hash}.${SettingsService.getInstance().getSettings().image.conversion.format}`,
     );
 });

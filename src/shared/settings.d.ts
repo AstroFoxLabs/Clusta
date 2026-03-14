@@ -27,7 +27,7 @@ export interface AppSettings {
     };
     paths: {
         app: string;
-        root: string;
+        userData: string;
         images: string;
         excalidraw: string;
     };

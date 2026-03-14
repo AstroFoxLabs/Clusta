@@ -25,7 +25,6 @@ export default class UpdateService {
 
         autoUpdater.on('update-available', (info) => {
             LogService.info('Update available:', info.version);
-            // Optional: Notify user that update is downloading
             dialog.showMessageBox({
                 type: 'info',
                 title: 'Update Available',

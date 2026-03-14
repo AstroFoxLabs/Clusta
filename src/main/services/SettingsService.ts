@@ -33,7 +33,7 @@ const defaultSettings: AppSettings = {
     },
     paths: {
         app: electron.app.getAppPath(),
-        root: electron.app.getPath('userData'),
+        userData: electron.app.getPath('userData'),
         images: path.join(electron.app.getPath('userData'), 'images'),
         excalidraw: path.join(electron.app.getPath('userData'), 'excalidraw'),
     },
