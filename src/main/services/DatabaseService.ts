@@ -1,13 +1,11 @@
-import electron from 'electron';
 import path from 'path';
 import sqlite3 from 'sqlite3';
 import LogService from './LogService.js';
-
-const { app } = electron;
+import SettingsService from './SettingsService.js';
 
 export default class DatabaseService {
     // %appdata%/roaming/refarchive/app.db
-    static DB_PATH = path.join(app.getPath('userData'), 'app.db');
+    static DB_PATH = path.join(SettingsService.getInstance().getSettings().paths.userData, 'app.db');
     static instance: DatabaseService | null = null;
     db: sqlite3.Database | null = null;
 
