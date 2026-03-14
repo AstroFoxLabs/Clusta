@@ -1,9 +1,10 @@
-import CategoriesMigration from '@main/migrations/CategoriesMigration.js';
-import ExcalidrawMigration from '@main/migrations/ExcalidrawMigration.js';
-import ImagesCategoriesMigration from '@main/migrations/ImagesCategoriesMigration.js';
-import ImagesMigration from '@main/migrations/ImagesMigration.js';
-import ImagesTagsMigration from '@main/migrations/ImagesTagsMigration.js';
-import TagsMigration from '@main/migrations/TagsMigration.js';
+import ImagesMigration from '@main/migrations/001_images_migration.js';
+import CategoriesMigration from '@main/migrations/002_categories_migration.js';
+import TagsMigration from '@main/migrations/003_tags_migration.js';
+import ImagesCategoriesMigration from '@main/migrations/004_images_categories_migration.js';
+import ImagesTagsMigration from '@main/migrations/005_images_tags_migration.js';
+import ExcalidrawMigration from '@main/migrations/006_excalidraw_migration.js';
+import DefaultDataMigration from '@main/migrations/007_default_data_migration.js';
 import DatabaseService from './DatabaseService.js';
 
 export interface Migration {
@@ -38,6 +39,7 @@ export default class MigrationService {
         const imagesCategoriesMigration = new ImagesCategoriesMigration();
         const imagesTagsMigration = new ImagesTagsMigration();
         const excalidrawMigration = new ExcalidrawMigration();
+        const defaultDataMigration = new DefaultDataMigration();
 
         this.migrations.push(
             imagesMigration,
@@ -46,6 +48,7 @@ export default class MigrationService {
             imagesCategoriesMigration,
             imagesTagsMigration,
             excalidrawMigration,
+            defaultDataMigration,
         );
 
         // Ensure correct order (Naming important)
