@@ -4,7 +4,7 @@
 
 <script setup lang="ts">
 import { convertToExcalidrawElements, Excalidraw } from '@excalidraw/excalidraw';
-import { ExcalidrawElementSkeleton } from '@excalidraw/excalidraw/data/transform';
+import type { ExcalidrawElementSkeleton } from '@excalidraw/excalidraw/data/transform';
 import type { ExcalidrawElement } from '@excalidraw/excalidraw/element/types';
 import '@excalidraw/excalidraw/index.css';
 import type {

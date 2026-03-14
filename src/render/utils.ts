@@ -73,7 +73,7 @@ export const getFileBufferFromPath = async (filePath: string): Promise<Uint8Arra
     try {
         return await ipcAPI<Uint8Array>(() => window.utils.createBufferFromFile(filePath));
     } catch (err) {
-        console.error('Failed to get file buffer from path:', filePath, err);
+        console.error('Failed to get file buffer from path:', { filePath }, err);
         throw err;
     }
 };
