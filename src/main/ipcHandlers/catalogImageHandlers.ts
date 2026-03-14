@@ -149,7 +149,7 @@ register<{ payload: ImageFilePayload }, ImageFilePayload>('persist-image-file', 
         throw new Error('File is not recognized as an image');
     }
 
-    if (!(await ValidationService.fileSizeIsValid(nodeBuffer))) {
+    if (!(ValidationService.fileSizeIsValid(nodeBuffer))) {
         throw new Error('File size exceeds the maximum allowed limit or is zero bytes');
     }
 
