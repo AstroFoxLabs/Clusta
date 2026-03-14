@@ -15,6 +15,7 @@ export default defineConfig({
             '@shared': path.resolve(projectRoot, 'src/shared'),
             '@render': path.resolve(projectRoot, 'src/render'),
             '@assets': path.resolve(projectRoot, 'src/render/public/assets'),
+            '@main': path.resolve(projectRoot, 'src/main'),
         },
     },
     //esbuild options for production build

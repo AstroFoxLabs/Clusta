@@ -1,9 +1,6 @@
-import path from 'path';
-import url from 'url';
+import path from 'node:path';
 import { defineConfig } from 'vitest/config';
-
-const filename = url.fileURLToPath(import.meta.url);
-const dirname = path.dirname(filename);
+const __dirname = path.dirname(__filename);
 
 export default defineConfig({
     test: {
@@ -11,10 +8,11 @@ export default defineConfig({
     },
     resolve: {
         alias: {
-            '@': path.resolve(dirname, 'src'),
-            '@shared': path.resolve(dirname, 'src/shared'),
-            '@render': path.resolve(dirname, 'src/render'),
-            '@assets': path.resolve(dirname, 'src/render/public/assets'),
+            '@': path.resolve(__dirname, '../src'),
+            '@shared': path.resolve(__dirname, '../shared'),
+            '@render': path.resolve(__dirname, '../render'),
+            '@assets': path.resolve(__dirname, '../render/public/assets'),
+            '@main': path.resolve(__dirname, '../main'),
         },
     },
 });
