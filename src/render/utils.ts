@@ -36,9 +36,9 @@ export const bitmapToBlob = async (imageBitmap: ImageBitmap, type = 'image/webp'
 
     return new Promise((resolve, reject) => {
         canvas.toBlob(
-            (b) => {
-                if (!b) reject(new Error('Blob returned is null'));
-                else return resolve(b);
+            (blob) => {
+                if (!blob) reject(new Error('Blob returned is null'));
+                else return resolve(blob);
             },
             type,
             quality,
@@ -46,10 +46,14 @@ export const bitmapToBlob = async (imageBitmap: ImageBitmap, type = 'image/webp'
     });
 };
 
+export const isUrl = (str: string): boolean => {
+    const urlPattern = /^(https?|ftp|file):\/\/[^\s]+$/;
+    return urlPattern.test(str);
+};
+
 export const getBitmapFromURL = async (url: string): Promise<ImageBitmap> => {
     try {
-        const urlPattern = /https?:\/\/[^\s]+/;
-        if (!urlPattern.test(url)) throw new Error('URL Pattern test failed.');
+        if (!isUrl(url)) throw new Error('Provided string is not a valid URL');
 
         const res = await fetch(url, {
             method: 'GET',
@@ -102,17 +106,17 @@ export const uploadFileList = async (fileList: FileList): Promise<void> => {
     const imageStore = useImageStore();
     for (const file of fileList) {
         try {
-        if ((Object.values(ALLOWED_IMAGE_TYPES) as string[]).includes(file.type)) {
-            const imageFile: ImageFilePayload = {
-                name: file.name,
-                mimeType: file.type as Values<typeof ALLOWED_IMAGE_TYPES>,
-                size: file.size,
-                data: new Uint8Array(await file.arrayBuffer()),
-                hash: await createBufferHash(new Uint8Array(await file.arrayBuffer())),
-            };
-            await imageStore.create(file.name, imageFile);
-        } else {
-            console.warn(`File ${file.name} has unsupported type ${file.type}. Skipping.`);
+            if ((Object.values(ALLOWED_IMAGE_TYPES) as string[]).includes(file.type)) {
+                const imageFile: ImageFilePayload = {
+                    name: file.name,
+                    mimeType: file.type as Values<typeof ALLOWED_IMAGE_TYPES>,
+                    size: file.size,
+                    data: new Uint8Array(await file.arrayBuffer()),
+                    hash: await createBufferHash(new Uint8Array(await file.arrayBuffer())),
+                };
+                await imageStore.create(file.name, imageFile);
+            } else {
+                console.warn(`File ${file.name} has unsupported type ${file.type}. Skipping.`);
                 throw new Error(`Unsupported file type: ${file.type}`);
             }
         } catch (err) {
