@@ -15,8 +15,9 @@ import type {
     ExcalidrawInitialDataState,
 } from '@excalidraw/excalidraw/types';
 import { useExcalidrawStore } from '@render/stores/excalidrawStore';
+import { useNotificationStore } from '@render/stores/notificationStore';
 import { useSettingsStore } from '@render/stores/settingsStore';
-import { bitmapToBlob, blobToBase64, getBitmapFromURL } from '@render/utils';
+import { bitmapToBlob, blobToBase64, getBitmapFromURL, isUrl } from '@render/utils';
 import React from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
@@ -33,6 +34,7 @@ type ExcalidrawSceneDataCache = {
 
 const excalidrawStore = useExcalidrawStore();
 const settingsStore = useSettingsStore();
+const notificationStore = useNotificationStore();
 
 // --- STATES ---
 
@@ -139,20 +141,31 @@ onMounted(() => {
             },
             onPaste: async (data, event) => {
                 if (data.text && data.text.length > 0) {
+                    if (!isUrl(data.text)) {
+                        console.warn(
+                            'Pasted text is not a valid URL, falling back to default pasting behavior:',
+                            data.text,
+                        );
+                        return true;
+                    }
                     try {
                         const el = (await createImageElementFromURL(data.text)) as ExcalidrawElement;
                         excalidrawAPI.updateScene({
                             elements: [...excalidrawAPI.getSceneElements(), el],
                         });
-                        data.text = ''; // Clear the text to prevent default text pasting
-                        return true;
-                    } catch (e) {
-                        console.error('Image could not the posted on the Scene.', e);
+                        return false; // prevent default pasting behavior
+                    } catch (err) {
+                        notificationStore.addEventMessage('Failed to paste image from URL');
+                        console.error('Error pasting image from URL:', err);
                     }
                 }
-                return false; // False -> Default Pasting (Usually Text)
+                return false;
             },
-
+            generateIdForFile: () => {
+                // change to selection when pasting file
+                excalidrawAPI.setActiveTool({ type: 'selection' });
+                return `file-${Date.now()}`;
+            },
             excalidrawAPI: (api) => {
                 excalidrawAPI = api;
             },
