@@ -5,9 +5,6 @@
 </template>
 
 <script setup lang="ts">
-// TODO: It might be better if we load .svg files as components and directly use them.
-// That way, we can easily change their color via CSS and also have more control over their styling in general.
-
 // --- PROPS & EMITS ---
 
 const props = defineProps({
@@ -32,12 +29,13 @@ const props = defineProps({
 <style scoped lang="scss">
 @use '@render/styles/variables' as *;
 .icon {
-    width: inherit;
-    height: inherit;
     justify-content: center;
     align-items: center;
-    display: inline-flex;
     line-height: 1.2;
+    font-size: 20px;
+    height: 100%;
+    display: inline;
+    align-content: center;
 
     &:hover {
         :deep(svg) {
