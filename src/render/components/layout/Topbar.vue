@@ -2,7 +2,7 @@
     <div class="topbar">
         <div class="topbar-actions">
             <div class="topbar-actions-extra">
-                <slot name="actions"> </slot>
+                <slot name="actions"></slot>
             </div>
             <div class="topbar-actions-settings">
                 <Icon codicon-name="settings-gear" @click="toggleSettings" />

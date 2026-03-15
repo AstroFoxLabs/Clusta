@@ -80,15 +80,19 @@ const onSubmit = async (e: KeyboardEvent) => {
 @use '@render/styles/variables' as *;
 
 .inline-button-input {
-    display: inline-flex;
-    flex-direction: row;
-    align-items: center;
-    height: 100%;
-
     &-button {
-        font-size: inherit;
         outline: unset;
         color: $white-trans-75;
+        font-size: inherit;
+        padding: 0.25rem 0.75rem;
+        font-size: inherit;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        :deep(.icon) {
+            font-size: inherit;
+        }
     }
     &-field {
         width: 100%;
