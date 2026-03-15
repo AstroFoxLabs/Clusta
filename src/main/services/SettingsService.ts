@@ -15,8 +15,8 @@ const defaultSettings: AppSettings = {
         maxSizeMB: 15,
     },
     excalidraw: {
-        saveIntervalSeconds: 15,
-        disableStyleOverride: true,
+        saveIntervalSeconds: 10,
+        disableStyleOverride: false,
     },
     grid: {
         disableFilter: false,
