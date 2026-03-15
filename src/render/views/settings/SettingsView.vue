@@ -1,6 +1,6 @@
 <template lang="html">
     <Topbar />
-    <div class="settings-view">
+    <div class="settings-view" v-if="tmpSettings">
         <div class="settings-view-controls">
             <FieldGroup class="field-group">
                 <template #title>App Settings</template>
@@ -86,10 +86,11 @@
         </div>
         <div class="settings-view-actions">
             <button @click="onSave" class="primary">Save Settings</button>
-            <button @click="onReset">Reset</button>
             <button @click="onDefault" class="danger">Reset to Default</button>
+            <button @click="onBack">Back</button>
         </div>
     </div>
+    <div v-else>Loading settings...</div>
 </template>
 
 <script setup lang="ts">
@@ -98,6 +99,7 @@ import FieldGroup from '@render/components/core/FieldGroup.vue';
 import InputCheckbox from '@render/components/core/InputCheckbox.vue';
 import InputField from '@render/components/core/InputField.vue';
 import Topbar from '@render/components/layout/Topbar.vue';
+import router from '@render/router';
 import { useAppStore } from '@render/stores/appStore';
 import { useImageStore } from '@render/stores/imageStore';
 import type { ModalActionCb, ModalDialog } from '@render/stores/modalStore';
@@ -106,7 +108,7 @@ import { useSettingsStore } from '@render/stores/settingsStore';
 import { useTagStore } from '@render/stores/tagStore';
 import { ALLOWED_IMAGE_TYPES } from '@shared/constants.js';
 import type { AppSettings } from '@shared/settings';
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 
 // --- PROPS & EMITS ---
 
@@ -123,7 +125,7 @@ const imageStore = useImageStore();
 // We want no reflection to the settings store
 // We use json parse/stringify to create a deep copy. Spread would only create a shallow copy
 // Instead structuredClone could be used
-const tmpSettings = ref<AppSettings>(JSON.parse(JSON.stringify(settingsStore.settings)));
+const tmpSettings = ref<AppSettings>();
 const tagCollectionNames = computed(() => tagStore.collection.map((tag) => tag.technical_name).join(', '));
 
 // --- COMPUTED ---
@@ -141,13 +143,10 @@ watch(
 // --- METHODS ---
 
 const onSave = async () => {
+    if (!tmpSettings.value) return;
     await settingsStore.assignSettings(tmpSettings.value);
     await settingsStore.persistSettings();
     await settingsStore.loadSettings();
-    tmpSettings.value = JSON.parse(JSON.stringify(settingsStore.settings));
-};
-
-const onReset = async () => {
     tmpSettings.value = JSON.parse(JSON.stringify(settingsStore.settings));
 };
 
@@ -172,6 +171,10 @@ const onDefault = async () => {
             },
         } as ModalActionCb<void>,
     } as ModalDialog);
+};
+
+const onBack = async () => {
+    router.back();
 };
 
 const onDeleteAllTags = async () => {
@@ -220,6 +223,10 @@ const onDeleteAllImages = async () => {
         } as ModalActionCb<void>,
     } as ModalDialog);
 };
+
+onMounted(async () => {
+    tmpSettings.value = await settingsStore.loadSettings();
+});
 </script>
 
 <style scoped lang="scss">
