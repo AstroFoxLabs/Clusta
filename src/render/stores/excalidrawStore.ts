@@ -79,12 +79,14 @@ export const useExcalidrawStore = defineStore('excalidraw', () => {
     const deleteScene = async (uuid: string): Promise<void> => {
         try {
             await ipcAPI<void>(() => window.excalidraw.deleteRecord(uuid));
-            scenes.value = scenes.value.filter((r) => r.uuid !== uuid);
             await ipcAPI<void>(() => window.excalidraw.deleteSceneData(uuid));
-        } catch (error) {
+            scenes.value = scenes.value.filter((r) => r.uuid !== uuid);
+            if (scenes.value.length === 0) await selectScene(null);
+            else await selectScene(scenes.value[0]);
+        } catch (err) {
             notificationStore.addEventMessage('Failed to delete excalidraw record');
-            console.error('Error deleting excalidraw record:', error);
-            throw error;
+            console.error('Error deleting excalidraw record:', err);
+            throw err;
         }
     };
 
@@ -188,6 +190,7 @@ export const useExcalidrawStore = defineStore('excalidraw', () => {
             const createRecord = async (name: string): Promise<ExcalidrawScene> => {
                 const uuid = await ipcAPI<string>(() => window.excalidraw.createRecord(crypto.randomUUID(), name));
                 const record = await ipcAPI<ExcalidrawSceneRecord>(() => window.excalidraw.getRecord(uuid));
+                await persistSceneData(sceneInitialData, uuid);
 
                 return {
                     uuid: record.uuid,
