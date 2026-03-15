@@ -1,6 +1,6 @@
 {
     "name": "clusta",
-    "version": "v1.0.7",
+    "version": "v1.0.8",
     "license": "GPLv3",
     "author": {
         "name": "AstroFoxLabs (Vinzenz Wetzel)",
@@ -13,11 +13,12 @@
         "dev": "npm run esbuild-main && npm run esbuild-preload && concurrently \"vite --config ./vite.config.render.ts\" \"electron .\"",
         "build": "npm run esbuild-main && npm run esbuild-preload && vite build --config ./vite.config.render.ts",
         "ts": "tsc -p src/tsconfig.json && tsc-alias -p src/tsconfig.json && tsc -p src/preload/tsconfig.json",
-        "test": "npx vitest --config src/tests/vitest.config.ts",
+        "test": "npx vitest --config src/tests/vitest.config.ts run",
         "pretty": "prettier --write \"./**/*.{js,jsx,mjs,cjs,ts,tsx,json}\"",
         "esbuild-main": "node build-main.mjs",
         "esbuild-preload": "node build-preload.mjs",
-        "build-for-windows": "npm run build && dotenv -e .env -- electron-builder --publish always"
+        "build-for-windows": "npm run build && dotenv -e .env -- electron-builder --publish always",
+        "build-for-linux": "npm run build && dotenv -e .env -- electron-builder --linux"
     },
     "build": {
         "appId": "com.astrofoxlabs.clusta",
