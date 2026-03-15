@@ -48,9 +48,12 @@ const windowSettingsProd: Electron.BrowserWindowConstructorOptions = {
 
 const createWindow = async () => {
     mainWindow = new BrowserWindow(app.isPackaged ? windowSettingsProd : windowSettingsDev);
-    if (!app.isPackaged && process.env.VITE_DEV_SERVER_URL) {
+    if (!app.isPackaged && process.env.VITE_DEV_SERVER_URL && process.env.NODE_ENV === 'development') {
+        LogService.info('Loading development server at', process.env.VITE_DEV_SERVER_URL);
+        mainWindow.webContents.openDevTools();
         await mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
     } else {
+        LogService.info('Loading production build');
         await mainWindow.loadFile(path.join(__dirname, '../render/index.html'));
     }
 };

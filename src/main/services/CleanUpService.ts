@@ -5,9 +5,7 @@ import LogService from './LogService.js';
 import SettingsService from './SettingsService.js';
 
 export default class CleanUpService {
-    static async all(): Promise<void> {
-
-    }
+    static async all(): Promise<void> {}
 
     // Removes records and files that are not linked to each other anymore.
     // Example: Image record exists in DB but the file is deleted from disk or vice versa.
