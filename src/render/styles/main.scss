@@ -55,21 +55,25 @@ button {
     background-color: $primary-500;
     outline: 1px solid $white-trans-50;
     border-radius: $border-radius-full;
-    padding: 0.25em 0.75em;
-    font-weight: 500;
+    padding: 0.25rem 0.75rem;
+    font-weight: 700;
+    font-family: 'nunito', sans-serif;
 
     &:hover {
         background-color: $primary-700;
         cursor: pointer;
     }
 
+    &:active {
+        filter: brightness(0.8);
+    }
+
     &.primary {
         background-color: $accent-400;
         color: $white;
-        outline: unset;
 
         &:hover {
-            background-color: $accent-500;
+            background-color: $accent-300;
         }
     }
 
@@ -79,7 +83,7 @@ button {
         outline: unset;
 
         &:hover {
-            background-color: #d32f2f;
+            background-color: #811515;
         }
     }
 }
