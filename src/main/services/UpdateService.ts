@@ -10,10 +10,17 @@ export function getAutoUpdater(): AppUpdater {
 }
 
 function isPortable() {
-    // If the app is running inside 'AppData\Local' or 'Program Files' it's installed
     const exePath = app.getPath('exe');
     const exeDir = path.dirname(exePath).toLowerCase();
-    return !(exeDir.includes('program files') || exeDir.includes('appdata'));
+
+    if (process.platform === 'win32') {
+        return !(exeDir.includes('program files') || exeDir.includes('appdata'));
+    } else if (process.platform === 'linux') {
+        return !(exeDir.startsWith('/usr') || exeDir.startsWith('/opt'));
+    } else if (process.platform === 'darwin') {
+        return !exeDir.startsWith('/Applications');
+    }
+    return false;
 }
 
 export default class UpdateService {
