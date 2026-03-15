@@ -50,6 +50,19 @@ const zoomLevel = defineModel({
 .grid {
     container-type: inline-size;
 
+    &::before {
+        content: '';
+        position: absolute;
+        background-image: url('/assets/images/drag-in-bg.png');
+        background-repeat: no-repeat;
+        background-position: 80% 20%;
+        background-size: 400px;
+        z-index: -1;
+        inset: 0;
+        opacity: 0.25;
+        pointer-events: none;
+    }
+
     &-zoom-slider {
         text-align: end;
         background: $primary-400;
