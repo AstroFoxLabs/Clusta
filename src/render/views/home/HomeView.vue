@@ -1,6 +1,7 @@
 <template lang="html">
     <Topbar>
         <template #actions>
+            <Icon @click="onOpenFileExplorer" codiconName="folder" title="Upload Images from Disk"></Icon>
             <Icon @click="mirrorSplit = !mirrorSplit" title="Mirror Split">
                 <svg width="59" height="16" viewBox="0 0 59 16" xmlns="http://www.w3.org/2000/svg">
                     <rect width="16" height="16" rx="2" />
@@ -48,6 +49,8 @@
 import Icon from '@render/components/core/Icon.vue';
 import SplitPane from '@render/components/core/SplitPane.vue';
 import Topbar from '@render/components/layout/Topbar.vue';
+import { useNotificationStore } from '@render/stores/notificationStore';
+import { openFileExplorerForImageUpload, uploadFileList } from '@render/utils';
 import { ref } from 'vue';
 import CatalogImageGrid from './components/CatalogImageGrid.vue';
 import SceneWorkspacePanel from './components/SceneWorkspacePanel.vue';
@@ -55,6 +58,8 @@ import SceneWorkspacePanel from './components/SceneWorkspacePanel.vue';
 // --- PROPS & EMITS ---
 
 // --- STORES ---
+
+const notificationStore = useNotificationStore();
 
 // --- STATES ---
 
@@ -65,6 +70,17 @@ const mirrorSplit = ref(false);
 // --- WATCHERS ---
 
 // --- METHODS ---
+
+const onOpenFileExplorer = async () => {
+    await openFileExplorerForImageUpload(async (f: FileList) => {
+        try {
+            await uploadFileList(f);
+        } catch (err) {
+            console.error('Failed to upload files from explorer:', err);
+            notificationStore.addEventMessage('Failed to upload files from explorer!');
+        }
+    });
+};
 </script>
 
 <style scoped lang="scss">
