@@ -92,7 +92,11 @@
                 v-if="selectedImage"
                 :position="ctxWinPosition"
             >
-                <ImageContextWindow :image="selectedImage" class="catalog-grid-context-window" />
+                <ImageContextWindow
+                    :image="selectedImage"
+                    class="catalog-grid-context-window"
+                    @on-close="(e: PointerEvent) => closeContextWindow(e, null)"
+                />
             </CloseableWindow>
         </teleport>
     </div>
@@ -342,9 +346,12 @@ const onOpenGridMenu = (e: PointerEvent) => {
         gap: 0.5rem;
         align-items: center;
         border-bottom: 1px solid #ffffff0d;
-        padding-bottom: 1rem;
+        padding: 1rem 0;
         font-size: 0.875rem;
-        height: 2.5rem;
+
+        &-add {
+            height: 100%;
+        }
     }
 
     &-grid {

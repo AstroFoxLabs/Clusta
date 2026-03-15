@@ -4,7 +4,7 @@
             <template #title>
                 <div class="field-group-title">
                     <img class="field-group-title-img" :src="imagePath" alt="" />
-                    <div class="field-group title text">Image Context</div>
+                    <div class="field-group title text">{{ image.name }}</div>
                 </div>
             </template>
             <Field label="Image Name">
@@ -66,7 +66,7 @@ import { useImageStore } from '@render/stores/imageStore';
 import { useSettingsStore } from '@render/stores/settingsStore';
 import { useTagStore } from '@render/stores/tagStore';
 import type { CatalogImage } from '@shared/types';
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 
 // --- PROPS & EMITS ---
 
@@ -131,8 +131,8 @@ const onCategorySelectionChanged = async (e: Event, items: DropdownSelectionItem
         for (const id of categoriesToAdd) {
             await categoryStore.assignToImage(props.image.id, id);
         }
-    } catch (error) {
-        console.error('Failed to assign category:', error);
+    } catch (err) {
+        console.error('Failed to assign category:', err);
         return;
     }
 };
@@ -153,6 +153,22 @@ const updateName = async (e: Event, value: string) => {
         });
     }
 };
+
+// close on click outsider
+const onClickOutside = (e: MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (!target.closest('.image-context-window')) {
+        emits('onClose', e);
+    }
+};
+
+onMounted(() => {
+    window.addEventListener('mousedown', onClickOutside);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('mousedown', onClickOutside);
+});
 </script>
 
 <style scoped lang="scss">
