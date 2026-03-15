@@ -25,10 +25,10 @@ export const useSettingsStore = defineStore('settings', () => {
             const res = await ipcAPI<AppSettings>(() => window.settings.loadSettings());
             settings.value = res;
             return settings.value;
-        } catch (error) {
+        } catch (err) {
             notificationStore.addEventMessage('Failed to load settings');
-            console.error('Error loading settings:', error);
-            throw error;
+            console.error('Error loading settings:', err);
+            throw err;
         }
     };
 
@@ -36,10 +36,10 @@ export const useSettingsStore = defineStore('settings', () => {
         try {
             await ipcAPI<void>(() => window.settings.assignSettings(JSON.parse(JSON.stringify(newSettings))));
             settings.value = newSettings;
-        } catch (error) {
+        } catch (err) {
             notificationStore.addEventMessage('Failed to assign settings');
-            console.error('Error assigning settings:', error);
-            throw error;
+            console.error('Error assigning settings:', err);
+            throw err;
         }
     };
 
@@ -47,10 +47,11 @@ export const useSettingsStore = defineStore('settings', () => {
     const persistSettings = async (): Promise<void> => {
         try {
             await ipcAPI<void>(() => window.settings.persistSettings());
-        } catch (error) {
+            notificationStore.addEventMessage('Settings were changed successfully');
+        } catch (err) {
             notificationStore.addEventMessage('Failed to persist settings');
-            console.error('Error persisting settings:', error);
-            throw error;
+            console.error('Error persisting settings:', err);
+            throw err;
         }
     };
 
@@ -58,10 +59,11 @@ export const useSettingsStore = defineStore('settings', () => {
         try {
             const defaultSettings = await ipcAPI<AppSettings>(() => window.settings.setToDefault());
             settings.value = defaultSettings;
-        } catch (error) {
+            notificationStore.addEventMessage('Settings were reset to default successfully');
+        } catch (err) {
             notificationStore.addEventMessage('Failed to set settings to default');
-            console.error('Error setting settings to default:', error);
-            throw error;
+            console.error('Error setting settings to default:', err);
+            throw err;
         }
     };
 

@@ -26,10 +26,10 @@ export const useTagStore = defineStore('tag', () => {
         try {
             const res = await ipcAPI<CatalogTag[]>(() => window.catalogTag.all());
             return upsert([...res], collection.value) as CatalogTag[];
-        } catch (error) {
+        } catch (err) {
             notificationStore.addEventMessage('Failed to fetch tags');
-            console.error('Error fetching tags:', error);
-            throw error;
+            console.error('Error fetching tags:', err);
+            throw err;
         }
     };
 
@@ -39,10 +39,10 @@ export const useTagStore = defineStore('tag', () => {
             const id = await ipcAPI<string>(() => window.catalogTag.create(technicalName));
             const tag = await ipcAPI<CatalogTag>(() => window.catalogTag.get(id));
             return upsert([tag], collection.value) as CatalogTag;
-        } catch (error) {
+        } catch (err) {
             notificationStore.addEventMessage('Failed to create tag');
-            console.error('Error creating tag:', error);
-            throw error;
+            console.error('Error creating tag:', err);
+            throw err;
         }
     };
 
@@ -61,10 +61,10 @@ export const useTagStore = defineStore('tag', () => {
 
             await ipcAPI<void>(() => window.catalogTag.assignToImage(imageId, tagId));
             image.tags = [...(image.tags ?? []), tag];
-        } catch (error) {
+        } catch (err) {
             notificationStore.addEventMessage('Failed to assign tag to image');
-            console.error('Error assigning tag to image:', error);
-            throw error;
+            console.error('Error assigning tag to image:', err);
+            throw err;
         }
     };
 
@@ -76,10 +76,10 @@ export const useTagStore = defineStore('tag', () => {
                 throw new Error(`Image with id ${imageId} not found`);
             }
             image.tags = image.tags?.filter((t) => t.id !== tagId) ?? [];
-        } catch (error) {
+        } catch (err) {
             notificationStore.addEventMessage('Failed to unassign tag from image');
-            console.error('Error unassigning tag from image:', error);
-            throw error;
+            console.error('Error unassigning tag from image:', err);
+            throw err;
         }
     };
 
@@ -87,10 +87,10 @@ export const useTagStore = defineStore('tag', () => {
         try {
             await ipcAPI<void>(() => window.catalogTag.delete(tagId));
             collection.value = collection.value.filter((t) => t.id !== tagId);
-        } catch (error) {
+        } catch (err) {
             notificationStore.addEventMessage('Failed to delete tag');
-            console.error('Error deleting tag:', error);
-            throw error;
+            console.error('Error deleting tag:', err);
+            throw err;
         }
     };
 

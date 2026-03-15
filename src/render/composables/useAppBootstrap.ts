@@ -35,10 +35,10 @@ export const useAppBootstrap = async () => {
             // console.log('Category Collection:', categoryStore.collection);
             // console.log('Tag Collection:', tagStore.collection);
             // console.log('Excalidraw Records:', excalidrawStore.scenes);
-        } catch (error) {
+        } catch (err) {
             notificationStore.addEventMessage('Failed to initialize app. Check Logs or contact Developer.');
-            console.error('Error during app initialization:', error);
-            throw error;
+            console.error('Error during app initialization:', err);
+            throw err;
         }
     };
 

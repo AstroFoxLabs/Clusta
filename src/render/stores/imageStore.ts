@@ -24,10 +24,10 @@ export const useImageStore = defineStore('image', () => {
         try {
             const res = await ipcAPI<CatalogImage[]>(() => window.catalogImage.all());
             return upsert([...res], collection.value) as CatalogImage[];
-        } catch (error) {
+        } catch (err) {
             notificationStore.addEventMessage('Failed to fetch images');
-            console.error('Error fetching images:', error);
-            throw error;
+            console.error('Error fetching images:', err);
+            throw err;
         }
     };
 
@@ -40,10 +40,9 @@ export const useImageStore = defineStore('image', () => {
         const persistFile = async (payload: ImageFilePayload, imageID: string): Promise<void> => {
             try {
                 await ipcAPI<ImageFilePayload>(() => window.catalogImage.persistFile(payload));
-            } catch (error) {
-                await deleteImage(imageID, true);
-                console.error('Error persisting image file:', error);
-                throw error;
+            } catch (err) {
+                deleteImage(imageID, true); // Only delete the record, file persistence failed
+                throw err;
             }
         };
 
@@ -51,10 +50,10 @@ export const useImageStore = defineStore('image', () => {
             const record = await createRecord(name, payload.hash);
             await persistFile(payload, record.id);
             return upsert([record], collection.value) as CatalogImage;
-        } catch (error) {
+        } catch (err) {
             notificationStore.addEventMessage('Failed to create image');
-            console.error('Error creating image:', error);
-            throw error;
+            console.error('Error creating image:', err);
+            throw err;
         }
     };
 
@@ -63,10 +62,10 @@ export const useImageStore = defineStore('image', () => {
             await ipcAPI<CatalogImage>(() => window.catalogImage.update(JSON.parse(JSON.stringify(image))));
             const updatedImage = await ipcAPI<CatalogImage>(() => window.catalogImage.get(image.id));
             return upsert([updatedImage], collection.value) as CatalogImage;
-        } catch (error) {
+        } catch (err) {
             notificationStore.addEventMessage('Failed to update image');
-            console.error('Error updating image:', error);
-            throw error;
+            console.error('Error updating image:', err);
+            throw err;
         }
     };
 
@@ -74,10 +73,10 @@ export const useImageStore = defineStore('image', () => {
         try {
             await ipcAPI<void>(() => window.catalogImage.delete(id, onlyRecord));
             collection.value = collection.value.filter((i) => i.id !== id);
-        } catch (error) {
+        } catch (err) {
             notificationStore.addEventMessage('Failed to delete image');
-            console.error('Error deleting image:', error);
-            throw error;
+            console.error('Error deleting image:', err);
+            throw err;
         }
     };
 

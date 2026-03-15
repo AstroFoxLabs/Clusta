@@ -35,9 +35,9 @@ export const useCategoryStore = defineStore('category', () => {
         try {
             const res = await ipcAPI<CatalogCategory[]>(() => window.catalogCategory.all());
             return upsert([...res], collection.value) as CatalogCategory[];
-        } catch (error) {
+        } catch (err) {
             notificationStore.addEventMessage('Failed to fetch categories');
-            throw error;
+            throw err;
         }
     };
 
@@ -49,10 +49,10 @@ export const useCategoryStore = defineStore('category', () => {
             const newCategory = await ipcAPI<CatalogCategory>(() => window.catalogCategory.get(id));
             upsert([newCategory], collection.value);
             return newCategory;
-        } catch (error) {
+        } catch (err) {
             notificationStore.addEventMessage('Failed to create category');
-            console.error('Error creating category:', error);
-            throw error;
+            console.error('Error creating category:', err);
+            throw err;
         }
     };
 
@@ -64,10 +64,10 @@ export const useCategoryStore = defineStore('category', () => {
             if (image && category) {
                 image.categories = [...(image.categories ?? []), category];
             }
-        } catch (error) {
+        } catch (err) {
             notificationStore.addEventMessage('Failed to assign category to image');
-            console.error('Error assigning category to image:', error);
-            throw error;
+            console.error('Error assigning category to image:', err);
+            throw err;
         }
     };
 
@@ -78,10 +78,10 @@ export const useCategoryStore = defineStore('category', () => {
             if (image) {
                 image.categories = image.categories?.filter((c) => c.id !== categoryId);
             }
-        } catch (error) {
+        } catch (err) {
             notificationStore.addEventMessage('Failed to unassign category from image');
-            console.error('Error unassigning category from image:', error);
-            throw error;
+            console.error('Error unassigning category from image:', err);
+            throw err;
         }
     };
 
@@ -89,10 +89,10 @@ export const useCategoryStore = defineStore('category', () => {
         try {
             await ipcAPI<void>(() => window.catalogCategory.delete(categoryId));
             collection.value = collection.value.filter((c) => c.id !== categoryId);
-        } catch (error) {
+        } catch (err) {
             notificationStore.addEventMessage('Failed to delete category');
-            console.error('Error deleting category:', error);
-            throw error;
+            console.error('Error deleting category:', err);
+            throw err;
         }
     };
 
@@ -101,10 +101,10 @@ export const useCategoryStore = defineStore('category', () => {
             await ipcAPI<CatalogCategory>(() => window.catalogCategory.update(JSON.parse(JSON.stringify(category))));
             const updatedCategory = await ipcAPI<CatalogCategory>(() => window.catalogCategory.get(category.id));
             return upsert([updatedCategory], collection.value) as CatalogCategory;
-        } catch (error) {
+        } catch (err) {
             notificationStore.addEventMessage('Failed to update category');
-            console.error('Error updating category:', error);
-            throw error;
+            console.error('Error updating category:', err);
+            throw err;
         }
     };
 

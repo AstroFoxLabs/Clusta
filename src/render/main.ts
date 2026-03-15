@@ -14,6 +14,6 @@ const { initializeApp } = await useAppBootstrap();
 try {
     await initializeApp();
     app.mount('#app');
-} catch (error) {
-    console.error('Initialization failed, stopping opening App.', error);
+} catch (err) {
+    console.error('Initialization failed, stopping opening App.', err);
 }

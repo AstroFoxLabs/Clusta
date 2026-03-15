@@ -69,10 +69,10 @@ export const useExcalidrawStore = defineStore('excalidraw', () => {
             await ipcAPI<ExcalidrawSceneRecord>(() => window.excalidraw.update(JSON.parse(JSON.stringify(record))));
             const updatedRecord = await ipcAPI<ExcalidrawSceneRecord>(() => window.excalidraw.getRecord(record.uuid));
             return upsert([updatedRecord], scenes.value, 'uuid') as ExcalidrawSceneRecord;
-        } catch (error) {
+        } catch (err) {
             notificationStore.addEventMessage('Failed to update excalidraw record');
-            console.error('Error updating excalidraw record:', error);
-            throw error;
+            console.error('Error updating excalidraw record:', err);
+            throw err;
         }
     };
 
@@ -96,10 +96,10 @@ export const useExcalidrawStore = defineStore('excalidraw', () => {
                 return scenes.value;
             }
             return upsert([...records], scenes.value, 'uuid') as ExcalidrawSceneRecord[];
-        } catch (error) {
+        } catch (err) {
             notificationStore.addEventMessage('Failed to fetch excalidraw records');
-            console.error('Error fetching excalidraw records:', error);
-            throw error;
+            console.error('Error fetching excalidraw records:', err);
+            throw err;
         }
     };
 
@@ -111,10 +111,10 @@ export const useExcalidrawStore = defineStore('excalidraw', () => {
                 name: scenes.value.find((s) => s.uuid === uuid)?.name ?? 'Unknown Scene',
                 ...data,
             } as ExcalidrawScene;
-        } catch (error) {
+        } catch (err) {
             notificationStore.addEventMessage('Failed to fetch excalidraw scene data');
-            console.error(`Error fetching excalidraw scene data for record ${uuid}:`, error);
-            throw error;
+            console.error(`Error fetching excalidraw scene data for record ${uuid}:`, err);
+            throw err;
         }
     };
 
@@ -134,10 +134,10 @@ export const useExcalidrawStore = defineStore('excalidraw', () => {
                 files: strippedScene.files,
             };
             return await ipcAPI<ExcalidrawSceneData>(() => window.excalidraw.persistSceneData(sceneData, uuid));
-        } catch (error) {
+        } catch (err) {
             notificationStore.addEventMessage('Failed to persist excalidraw scene data');
-            console.error(`Error persisting excalidraw scene data for record ${uuid}:`, error);
-            throw error;
+            console.error(`Error persisting excalidraw scene data for record ${uuid}:`, err);
+            throw err;
         }
     };
 
@@ -152,9 +152,9 @@ export const useExcalidrawStore = defineStore('excalidraw', () => {
                         await persistSceneData(scene, scene.uuid);
                         scene.mutated = false;
                     }
-                } catch (error) {
+                } catch (err) {
                     notificationStore.addEventMessage(`Excalidraw persist failed: ${scene.name}`);
-                    console.error(`Failed to persist scene data for record ${scene.uuid}:`, error);
+                    console.error(`Failed to persist scene data for record ${scene.uuid}:`, err);
                 }
             }
         }, persistIntervalMs.value);
@@ -173,9 +173,9 @@ export const useExcalidrawStore = defineStore('excalidraw', () => {
             console.warn(`${scene.uuid} is missing appstate / elements / files... Fetching data.`);
             try {
                 Object.assign(scene, await fetchSceneData(scene.uuid));
-            } catch (error) {
+            } catch (err) {
                 notificationStore.addEventMessage('Failed to load excalidraw scene data');
-                console.error(`Failed to load scene data for record ${scene.uuid}. Setting null now`, error);
+                console.error(`Failed to load scene data for record ${scene.uuid}. Setting null now`, err);
                 scene = null;
             }
         }
@@ -197,10 +197,10 @@ export const useExcalidrawStore = defineStore('excalidraw', () => {
             };
             const resScene = await createRecord(name);
             return upsert([resScene], scenes.value, 'uuid') as ExcalidrawScene;
-        } catch (error) {
+        } catch (err) {
             notificationStore.addEventMessage('Failed to create new excalidraw scene');
-            console.error('Error creating new excalidraw scene:', error);
-            throw error;
+            console.error('Error creating new excalidraw scene:', err);
+            throw err;
         }
     };
 

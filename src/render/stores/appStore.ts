@@ -43,6 +43,7 @@ export const useAppStore = defineStore('app', () => {
 
     /* ----------------------------- ACTIONS ------------------------- */
 
+    // TODO: Not a fan of having this in the app store.
     const setAlwaysOnTop = async (alwaysOnTop: boolean): Promise<void> => {
         await ipcAPI<void>(() => window.appWindow.setAlwaysOnTop(alwaysOnTop));
     };

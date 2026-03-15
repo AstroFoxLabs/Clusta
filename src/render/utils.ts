@@ -63,9 +63,9 @@ export const getBitmapFromURL = async (url: string): Promise<ImageBitmap> => {
         const imageBitMap = await createImageBitmap(blob);
 
         return imageBitMap;
-    } catch (e) {
-        console.error('Bitmap could not be generated from URL', e);
-        throw e;
+    } catch (err) {
+        console.error('Bitmap could not be generated from URL', err);
+        throw err;
     }
 };
 
@@ -81,9 +81,9 @@ export const getFileBufferFromPath = async (filePath: string): Promise<Uint8Arra
 export const createBufferHash = async (buffer: Uint8Array): Promise<string> => {
     try {
         return await ipcAPI<string>(() => window.utils.createBufferHash(buffer));
-    } catch (error) {
-        console.error('Failed to create buffer hash:', error);
-        throw error;
+    } catch (err) {
+        console.error('Failed to create buffer hash:', err);
+        throw err;
     }
 };
 
@@ -101,6 +101,7 @@ export const openFileExplorerForImageUpload = async (cb: Function): Promise<void
 export const uploadFileList = async (fileList: FileList): Promise<void> => {
     const imageStore = useImageStore();
     for (const file of fileList) {
+        try {
         if ((Object.values(ALLOWED_IMAGE_TYPES) as string[]).includes(file.type)) {
             const imageFile: ImageFilePayload = {
                 name: file.name,
@@ -112,6 +113,11 @@ export const uploadFileList = async (fileList: FileList): Promise<void> => {
             await imageStore.create(file.name, imageFile);
         } else {
             console.warn(`File ${file.name} has unsupported type ${file.type}. Skipping.`);
+                throw new Error(`Unsupported file type: ${file.type}`);
+            }
+        } catch (err) {
+            console.error('Failed to upload file:', { file }, err);
+            throw err;
         }
     }
 };
