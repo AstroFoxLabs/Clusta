@@ -50,6 +50,7 @@ const modalStore = useModalStore();
         bottom: 4rem;
         right: 4rem;
         z-index: $z-index-toast;
+        font-size: 1.2rem;
 
         &-toast {
             display: flex;
