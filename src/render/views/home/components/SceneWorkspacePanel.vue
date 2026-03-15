@@ -17,6 +17,7 @@
             </InlineButtonInput>
         </div>
         <Excalidraw v-if="excalidrawStore.selectedScene" />
+        <div class="scene-workspace-panel-empty-scene"></div>
     </div>
 </template>
 
@@ -169,6 +170,23 @@ const onSubmitNewScene = async (e: KeyboardEvent, name: string) => {
 
         &-add {
             font-size: 0.875rem;
+        }
+    }
+
+    &-empty-scene {
+        width: 100%;
+        height: 100%;
+
+        &::before {
+            content: '';
+            position: absolute;
+            background-image: url('/assets/images/start-scene-bg.png');
+            background-repeat: no-repeat;
+            background-position: 0% 5%;
+            background-size: 400px;
+            inset: 0;
+            opacity: 0.25;
+            pointer-events: none;
         }
     }
 }
