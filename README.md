@@ -6,7 +6,9 @@ It provides a user-friendly interface to import your images, categorize them, an
 
 Additionally, Clusta includes an Excalidraw window, allowing you to drag your images in and create scenes for your projects and notes. This is especially useful for artists, designers, and anyone who needs to visualize their ideas.
 
-![Clusta Screenshot](https://i.imgur.com/eB2kXnF.png)
+<p align="center">
+  <img src="https://i.imgur.com/eB2kXnF.png" />
+</p>
 
 ## Features
 
