@@ -43,7 +43,7 @@ Contributions are welcome! If you have any ideas for new features or improvement
 
 Clone the project and run:
 ```
-npm run install
+npm install
 npm run dev
 ```
 
